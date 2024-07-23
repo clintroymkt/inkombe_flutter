@@ -41,6 +41,7 @@ dependencies:
   tflite_flutter: ^0.10.4
   firebase_app_installations: ^0.3.0+3
   firebase_auth: ^5.1.2
+  grouped_list: ^6.0.0
 
 dev_dependencies:
   flutter_test:

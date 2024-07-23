@@ -1,12 +1,12 @@
-chihuahua
-japanese spaniel
-maltese dog
-pekinese
-shih tzu
-blenheim spaniel
-papillon
-toy terrier
-rhodesian ridgeback
+Jersey
+Brahman
+Holstein
+Limousin
+Piedmontese
+Red Angus
+Scottish Highland
+Gonsmara
+Boran
 afghan hound
 basset
 beagle

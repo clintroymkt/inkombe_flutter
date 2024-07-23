@@ -99,11 +99,11 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(title: Text("Cow Breed Recognizer Getx"),),
+        appBar: AppBar(title: Text("Cow Breed Recognizer Module"),),
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage("assets/back.jpg"),
+                image: AssetImage("assets/backscreen.png"),
                 fit: BoxFit.fill,
             ),
           ),
