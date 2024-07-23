@@ -39,4 +39,7 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    <!-- Add these permissions for camera and internet access -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>

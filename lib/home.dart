@@ -1,8 +1,8 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:inkombe_flutter/main.dart';
 import 'package:tflite/tflite.dart';
+import 'package:inkombe_flutter/main.dart';
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -11,107 +11,94 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   bool isWorking = false;
   String result = '';
   CameraController? cameraController;
   CameraImage? imgCamera;
 
-  initCamera()
-  {
+  void initCamera() {
     cameraController = CameraController(cameras![0], ResolutionPreset.medium);
-    cameraController!.initialize().then((value)
-    {
-      if(!mounted)
-        {
-          return;
-        }
+    cameraController!.initialize().then((value) {
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
-        cameraController!.startImageStream((imageFromStream) =>
-        {
-          if(!isWorking)
-          {
-            isWorking = true,
-            imgCamera = imageFromStream,
-            runModelOnStream(),
+        cameraController!.startImageStream((imageFromStream) {
+          if (!isWorking) {
+            isWorking = true;
+            imgCamera = imageFromStream;
+            runModelOnStream();
           }
         });
       });
     });
   }
 
-  loadModel()async{
+  Future<void> loadModel() async {
     await Tflite.loadModel(
-        model: "assets/model.tflite",
-        labels: "assets/labels.txt"
+      model: "assets/model.tflite",
+      labels: "assets/labels.txt",
     );
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadModel();
   }
 
-  runModelOnStream()async{
-    if(imgCamera != null)
-      {
-        var recognitions = await Tflite.runModelOnFrame(
-            bytesList: imgCamera!.planes.map((plane)
-            {
-              return plane.bytes;
-            }).toList(),
+  Future<void> runModelOnStream() async {
+    if (imgCamera != null) {
+      var recognitions = await Tflite.runModelOnFrame(
+        bytesList: imgCamera!.planes.map((plane) {
+          return plane.bytes;
+        }).toList(),
+        imageHeight: imgCamera!.height,
+        imageWidth: imgCamera!.width,
+        imageMean: 127.5,
+        imageStd: 127.5,
+        rotation: 90,
+        numResults: 2,
+        threshold: 0.1,
+        asynch: true,
+      );
+      result = '';
 
-          imageHeight: imgCamera!.height,
-          imageWidth: imgCamera!.width,
-          imageMean: 127.5,
-          imageStd: 127.5,
-          rotation: 90,
-          numResults: 2,
-          threshold: 0.1,
-          asynch: true,
-        );
-        result = '';
+      recognitions!.forEach((response) {
+        result += response["label"] + "  " + (response["confidence"] as double).toStringAsFixed(2) + "\n\n";
+      });
 
-        recognitions!.forEach((response)
-        {
-          result += response["label"] + "  " + (response["confidence"] as double).toStringAsFixed(2)+ "\n\n";
-        });
-        setState(() {
-          result;
-        });
-        isWorking = false;
-      }
+      setState(() {
+        result;
+      });
+      isWorking = false;
+    }
   }
 
   @override
-  void dispose() async{
-    // TODO: implement dispose
-    super.dispose();
-
-    await Tflite.close();
+  void dispose() {
+    Tflite.close();
     cameraController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(title: Text("Cow Breed Recognizer Module"),),
+        appBar: AppBar(title: const Text("Cow Breed Recognizer Module")),
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage("assets/backscreen.png"),
-                fit: BoxFit.fill,
+              image: AssetImage("assets/backscreen.png"),
+              fit: BoxFit.fill,
             ),
           ),
           child: Column(
             children: [
               Stack(
                 children: [
-
                   Center(
                     child: Container(
                       height: 320.0,
@@ -119,11 +106,9 @@ class _HomeState extends State<Home> {
                       child: Image.asset("assets/frame.jpg"),
                     ),
                   ),
-
                   Center(
                     child: TextButton(
-                      onPressed: ()
-                      {
+                      onPressed: () {
                         initCamera();
                       },
                       child: Container(
@@ -131,23 +116,24 @@ class _HomeState extends State<Home> {
                         height: 270.0,
                         width: 360.0,
                         child: imgCamera == null
-                            ?
-                            Container(
-                              height: 270.0,
-                              width: 360.0,
-                              child: Icon(Icons.photo_camera_front,color: Colors.amberAccent,size: 40.0,),
-                            )
-                            :
-                            AspectRatio(
-                                aspectRatio: cameraController!.value.aspectRatio,
-                                child: CameraPreview(cameraController!),
-                            ),
+                            ? Container(
+                          height: 270.0,
+                          width: 360.0,
+                          child: const Icon(
+                            Icons.photo_camera_front,
+                            color: Colors.amberAccent,
+                            size: 40.0,
+                          ),
+                        )
+                            : AspectRatio(
+                          aspectRatio: cameraController!.value.aspectRatio,
+                          child: CameraPreview(cameraController!),
+                        ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
-
               Center(
                 child: Container(
                   margin: const EdgeInsets.only(top: 55.0),
@@ -161,9 +147,9 @@ class _HomeState extends State<Home> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  )
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),
