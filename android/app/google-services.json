@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "254166081597",
+    "project_id": "inkombe-12bb2",
+    "storage_bucket": "inkombe-12bb2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:254166081597:android:82fef7808dd306b8060a54",
+        "android_client_info": {
+          "package_name": "com.example.inkombe_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSUh0w-4sMd1q3usEBUuuckoA91FCPkm4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
