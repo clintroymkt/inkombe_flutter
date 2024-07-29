@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:inkombe_flutter/Authentication/pages/login.dart';
 import 'package:inkombe_flutter/Authentication/pages/login_or_register_switch_page.dart';
 import 'package:inkombe_flutter/Authentication/placeholder.dart';
+import 'package:inkombe_flutter/homepage.dart';
 
 class MainPageRouter extends StatelessWidget {
   const MainPageRouter({super.key});
@@ -14,7 +15,7 @@ class MainPageRouter extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot){
           if(snapshot.hasData){
-            return const HomePage();
+            return const Homepage();
           } else{
             return const LoginOrRegisterSwitchPage();
           }
