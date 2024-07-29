@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:tflite/tflite.dart';
 import 'package:inkombe_flutter/main.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class ScanPage extends StatefulWidget {
+  const ScanPage({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<ScanPage> createState() => _ScanPageState();
 }
 
-class _HomeState extends State<Home> {
+class _ScanPageState extends State<ScanPage> {
   bool isWorking = false;
   String result = '';
   CameraController? cameraController;

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:inkombe_flutter/Authentication/placeholder.dart';
-import 'package:inkombe_flutter/home.dart';
+import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:inkombe_flutter/homepage.dart';
 
 import '../../widgets.dart';
@@ -182,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage>{
       await _authService.signUpUserWithEmailAndPassword(_emailController.text.trim(),_passwordController.text.trim()).then(
               (value) async {
             if (value == true){
-              nextScreen(context, const HomePage());
+              nextScreen(context, const Homepage());
             } else{
               showSnackBar(context, Colors.redAccent, value);
             }
