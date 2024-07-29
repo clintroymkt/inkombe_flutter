@@ -71,7 +71,7 @@ Widget build(BuildContext context) {
                                       width: 15,
                                       height: 19,
                                       child: Image.asset(
-                                        'assets/icons/bell.svg',
+                                        'assets/icons/bell.png',
                                         fit: BoxFit.fill,
                                       )
                                   ),
@@ -158,7 +158,7 @@ Widget build(BuildContext context) {
                         ),
                         IntrinsicHeight(
                           child: Container(
-                            color: Color(0x1C89D6AD),
+                            color: Color(0xFFFFFFFF),
                             padding: EdgeInsets.only( top: 20, bottom: 20, left: 16, right: 16),
                             margin: EdgeInsets.only( bottom: 31),
                             width: double.infinity,
@@ -199,8 +199,8 @@ Widget build(BuildContext context) {
                                                       bottomRight: Radius.circular(4),
                                                       bottomLeft: Radius.circular(2),
                                                     ),
-                                                    child: Image.network(
-                                                      'assets/icons/Bruiser.svg',
+                                                    child: Image.asset(
+                                                      'assets/icons/bruiser.png',
                                                       fit: BoxFit.fill,
                                                     )
                                                 )
@@ -232,8 +232,8 @@ Widget build(BuildContext context) {
                                                                 Container(
                                                                     width: 12,
                                                                     height: 12,
-                                                                    child: Image.network(
-                                                                      'assets/icons/calorange.svg',
+                                                                    child: Image.asset(
+                                                                      'assets/icons/weightorange.png',
                                                                       fit: BoxFit.fill,
                                                                     )
                                                                 ),
@@ -257,8 +257,8 @@ Widget build(BuildContext context) {
                                                                     margin: EdgeInsets.only( right: 4),
                                                                     width: 24,
                                                                     height: 24,
-                                                                    child: Image.network(
-                                                                      'https://i.imgur.com/1tMFzp8.png',
+                                                                    child: Image.asset(
+                                                                      'assets/icons/calorange.png',
                                                                       fit: BoxFit.fill,
                                                                     )
                                                                 ),
@@ -288,26 +288,11 @@ Widget build(BuildContext context) {
                                               height: 52,
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                    image: AssetImage('assets/icons/weightorange.png'),
                                                     fit: BoxFit.cover
                                                 ),
                                               ),
-                                              child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Container(
-                                                          margin: EdgeInsets.only( top: 16),
-                                                          height: 18,
-                                                          width: double.infinity,
-                                                          child: Image.network(
-                                                            'https://i.imgur.com/1tMFzp8.png',
-                                                            fit: BoxFit.fill,
-                                                          )
-                                                      ),
-                                                    ),
-                                                  ]
-                                              ),
+
                                             ),
                                           ]
                                       ),
@@ -346,8 +331,8 @@ Widget build(BuildContext context) {
                                                       bottomRight: Radius.circular(4),
                                                       bottomLeft: Radius.circular(2),
                                                     ),
-                                                    child: Image.network(
-                                                      'https://i.imgur.com/1tMFzp8.png',
+                                                    child: Image.asset(
+                                                      'assets/icons/king.png',
                                                       fit: BoxFit.fill,
                                                     )
                                                 )
@@ -379,8 +364,8 @@ Widget build(BuildContext context) {
                                                                 Container(
                                                                     width: 12,
                                                                     height: 12,
-                                                                    child: Image.network(
-                                                                      'https://i.imgur.com/1tMFzp8.png',
+                                                                    child: Image.asset(
+                                                                      'assets/icons/dropframe.png',
                                                                       fit: BoxFit.fill,
                                                                     )
                                                                 ),
@@ -404,8 +389,8 @@ Widget build(BuildContext context) {
                                                                     margin: EdgeInsets.only( right: 4),
                                                                     width: 24,
                                                                     height: 24,
-                                                                    child: Image.network(
-                                                                      'https://i.imgur.com/1tMFzp8.png',
+                                                                    child: Image.asset(
+                                                                      'assets/icons/calorange.png',
                                                                       fit: BoxFit.fill,
                                                                     )
                                                                 ),
@@ -435,26 +420,11 @@ Widget build(BuildContext context) {
                                               height: 52,
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                    image: AssetImage("assets/icons/healthorange.png"),
                                                     fit: BoxFit.cover
                                                 ),
                                               ),
-                                              child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Container(
-                                                          margin: EdgeInsets.only( top: 17),
-                                                          height: 21,
-                                                          width: double.infinity,
-                                                          child: Image.network(
-                                                            'https://i.imgur.com/1tMFzp8.png',
-                                                            fit: BoxFit.fill,
-                                                          )
-                                                      ),
-                                                    ),
-                                                  ]
-                                              ),
+
                                             ),
                                           ]
                                       ),
@@ -476,7 +446,7 @@ Widget build(BuildContext context) {
                         ),
                         IntrinsicHeight(
                           child: Container(
-                            color: Color(0x1C89D6AD),
+                            color: Color(0xFFFFFFFF),
                             padding: EdgeInsets.only( left: 16, right: 16),
                             margin: EdgeInsets.only( bottom: 44),
                             width: double.infinity,
@@ -517,8 +487,8 @@ Widget build(BuildContext context) {
                                                       bottomRight: Radius.circular(4),
                                                       bottomLeft: Radius.circular(2),
                                                     ),
-                                                    child: Image.network(
-                                                      'https://i.imgur.com/1tMFzp8.png',
+                                                    child: Image.asset(
+                                                      'assets/icons/dippic.png',
                                                       fit: BoxFit.fill,
                                                     )
                                                 )
@@ -551,8 +521,8 @@ Widget build(BuildContext context) {
                                                                       margin: EdgeInsets.only( right: 8),
                                                                       width: 12,
                                                                       height: 12,
-                                                                      child: Image.network(
-                                                                        'https://i.imgur.com/1tMFzp8.png',
+                                                                      child: Image.asset(
+                                                                        'assets/icons/dropframe.png',
                                                                         fit: BoxFit.fill,
                                                                       )
                                                                   ),
@@ -581,8 +551,8 @@ Widget build(BuildContext context) {
                                                                       margin: EdgeInsets.only( right: 4),
                                                                       width: 24,
                                                                       height: 24,
-                                                                      child: Image.network(
-                                                                        'https://i.imgur.com/1tMFzp8.png',
+                                                                      child: Image.asset(
+                                                                        'assets/icons/calorange.png',
                                                                         fit: BoxFit.fill,
                                                                       )
                                                                   ),
@@ -613,26 +583,11 @@ Widget build(BuildContext context) {
                                               height: 52,
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                    image: AssetImage("assets/icons/dropgrey.png"),
                                                     fit: BoxFit.cover
                                                 ),
                                               ),
-                                              child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Container(
-                                                          margin: EdgeInsets.only( top: 16),
-                                                          height: 20,
-                                                          width: double.infinity,
-                                                          child: Image.network(
-                                                            'https://i.imgur.com/1tMFzp8.png',
-                                                            fit: BoxFit.fill,
-                                                          )
-                                                      ),
-                                                    ),
-                                                  ]
-                                              ),
+
                                             ),
                                           ]
                                       ),
@@ -653,29 +608,7 @@ Widget build(BuildContext context) {
                                       color: Color(0xFFFFFFFF),
                                       padding: EdgeInsets.only( top: 12, bottom: 12, left: 20, right: 20),
                                       width: 72,
-                                      child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                  margin: EdgeInsets.only( bottom: 4),
-                                                  height: 19,
-                                                  width: double.infinity,
-                                                  child: Image.network(
-                                                    'https://i.imgur.com/1tMFzp8.png',
-                                                    fit: BoxFit.fill,
-                                                  )
-                                              ),
-                                            ),
-                                            Text(
-                                              'Home',
-                                              style: TextStyle(
-                                                color: Color(0xFFD98E47),
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ]
-                                      ),
+
                                     ),
                                   ),
                                   IntrinsicHeight(

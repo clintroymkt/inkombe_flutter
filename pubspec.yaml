@@ -68,6 +68,22 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/icons/king.png
+    - assets/icons/bell.png
+    - assets/icons/bruiser.png
+    - assets/icons/calorange.png
+    - assets/icons/database.png
+    - assets/icons/dippic.png
+    - assets/icons/dropframe.png
+    - assets/icons/dropgrey.png
+    - assets/icons/event_upcoming.png
+    - assets/icons/healthorange.png
+    - assets/icons/homeorange.png
+    - assets/icons/king.png
+    - assets/icons/scanbtn.png
+    - assets/icons/search_24px.png
+    - assets/icons/Task completion.png
+    - assets/icons/weightorange.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
