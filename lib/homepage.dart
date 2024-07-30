@@ -1,4 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:inkombe_flutter/bruiserpage.dart';
+import 'package:inkombe_flutter/kingpage.dart';
 
 class Homepage extends StatelessWidget {
 const Homepage({super.key});
@@ -126,284 +130,307 @@ Widget build(BuildContext context) {
                             ),
                           ),
                         ),
-                        IntrinsicHeight(
-                          child: Container(
-                            color: Color(0xFFFFFFFF),
-                            padding: EdgeInsets.only( top: 20, bottom: 20, left: 16, right: 16),
-                            margin: EdgeInsets.only( bottom: 31),
-                            width: double.infinity,
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  IntrinsicHeight(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Color(0xFFF59E0B),
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                        color: Color(0xFFFFFFFF),
-                                      ),
-                                      padding: EdgeInsets.all(2),
-                                      margin: EdgeInsets.only( bottom: 8),
-                                      width: double.infinity,
-                                      child: Row(
-                                          children: [
-                                            Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.only(
-                                                    topLeft: Radius.circular(2),
-                                                    topRight: Radius.circular(4),
-                                                    bottomRight: Radius.circular(4),
-                                                    bottomLeft: Radius.circular(2),
-                                                  ),
-                                                ),
-                                                margin: EdgeInsets.only( right: 14),
-                                                width: 93,
-                                                height: 98,
-                                                child: ClipRRect(
-                                                    borderRadius: BorderRadius.only(
-                                                      topLeft: Radius.circular(2),
-                                                      topRight: Radius.circular(4),
-                                                      bottomRight: Radius.circular(4),
-                                                      bottomLeft: Radius.circular(2),
-                                                    ),
-                                                    child: Image.asset(
-                                                      'assets/icons/bruiser.png',
-                                                      fit: BoxFit.fill,
-                                                    )
-                                                )
+
+                           IntrinsicHeight(
+                            child: Container(
+                              color: Color(0xFFFFFFFF),
+                              padding: EdgeInsets.only( top: 20, bottom: 20, left: 16, right: 16),
+                              margin: EdgeInsets.only( bottom: 31),
+                              width: double.infinity,
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+
+                                    GestureDetector(
+                                      child: IntrinsicHeight(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Color(0xFFF59E0B),
+                                              width: 2,
                                             ),
-                                            IntrinsicHeight(
-                                              child: Container(
-                                                margin: EdgeInsets.only( right: 39),
-                                                width: 108,
-                                                child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Container(
-                                                        margin: EdgeInsets.only( bottom: 12, left: 2),
-                                                        child: Text(
-                                                          'Bruiser',
-                                                          style: TextStyle(
-                                                            color: Color(0xFF262626),
-                                                            fontSize: 16,
-                                                          ),
-                                                        ),
+                                            borderRadius: BorderRadius.circular(4),
+                                            color: Color(0xFFFFFFFF),
+                                          ),
+                                          padding: EdgeInsets.all(2),
+                                          margin: EdgeInsets.only( bottom: 8),
+                                          width: double.infinity,
+                                          child: Row(
+                                              children: [
+                                                Container(
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.only(
+                                                        topLeft: Radius.circular(2),
+                                                        topRight: Radius.circular(4),
+                                                        bottomRight: Radius.circular(4),
+                                                        bottomLeft: Radius.circular(2),
                                                       ),
-                                                      IntrinsicHeight(
-                                                        child: Container(
-                                                          margin: EdgeInsets.only( bottom: 9),
-                                                          width: double.infinity,
-                                                          child: Row(
-                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                              children: [
-                                                                Container(
-                                                                    width: 12,
-                                                                    height: 12,
-                                                                    child: Image.asset(
-                                                                      'assets/icons/weightorange.png',
-                                                                      fit: BoxFit.fill,
-                                                                    )
-                                                                ),
-                                                                Text(
-                                                                  'Weight Update',
-                                                                  style: TextStyle(
-                                                                    color: Color(0xFF737373),
-                                                                    fontSize: 12,
-                                                                  ),
-                                                                ),
-                                                              ]
-                                                          ),
+                                                    ),
+                                                    margin: EdgeInsets.only( right: 14),
+                                                    width: 93,
+                                                    height: 98,
+                                                    child: ClipRRect(
+                                                        borderRadius: BorderRadius.only(
+                                                          topLeft: Radius.circular(2),
+                                                          topRight: Radius.circular(4),
+                                                          bottomRight: Radius.circular(4),
+                                                          bottomLeft: Radius.circular(2),
                                                         ),
-                                                      ),
-                                                      IntrinsicHeight(
-                                                        child: Container(
-                                                          width: double.infinity,
-                                                          child: Row(
-                                                              children: [
-                                                                Container(
-                                                                    margin: EdgeInsets.only( right: 4),
-                                                                    width: 24,
-                                                                    height: 24,
-                                                                    child: Image.asset(
-                                                                      'assets/icons/calorange.png',
-                                                                      fit: BoxFit.fill,
-                                                                    )
-                                                                ),
-                                                                Expanded(
-                                                                  child: Container(
-                                                                    width: double.infinity,
-                                                                    child: Text(
-                                                                      'Today',
+                                                        child: Image.asset(
+                                                          'assets/icons/bruiser.png',
+                                                          fit: BoxFit.fill,
+                                                        )
+                                                    )
+                                                ),
+                                                IntrinsicHeight(
+                                                  child: Container(
+                                                    margin: EdgeInsets.only( right: 39),
+                                                    width: 108,
+                                                    child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Container(
+                                                            margin: EdgeInsets.only( bottom: 12, left: 2),
+                                                            child: Text(
+                                                              'Bruiser',
+                                                              style: TextStyle(
+                                                                color: Color(0xFF262626),
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          IntrinsicHeight(
+                                                            child: Container(
+                                                              margin: EdgeInsets.only( bottom: 9),
+                                                              width: double.infinity,
+                                                              child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Container(
+                                                                        width: 12,
+                                                                        height: 12,
+                                                                        child: Image.asset(
+                                                                          'assets/icons/weightorange.png',
+                                                                          fit: BoxFit.fill,
+                                                                        )
+                                                                    ),
+                                                                    Text(
+                                                                      'Weight Update',
                                                                       style: TextStyle(
-                                                                        color: Color(0xFFF59E0B),
+                                                                        color: Color(0xFF737373),
                                                                         fontSize: 12,
                                                                       ),
                                                                     ),
-                                                                  ),
-                                                                ),
-                                                              ]
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ]
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: EdgeInsets.only( left: 18, right: 18),
-                                              width: 52,
-                                              height: 52,
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                    image: AssetImage('assets/icons/weightorange.png'),
-                                                    fit: BoxFit.cover
-                                                ),
-                                              ),
+                                                                  ]
+                                                              ),
+                                                            ),
 
-                                            ),
-                                          ]
-                                      ),
-                                    ),
-                                  ),
-                                  IntrinsicHeight(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Color(0xFFD98E47),
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                        color: Color(0xFFFFFFFF),
-                                      ),
-                                      padding: EdgeInsets.all(2),
-                                      width: double.infinity,
-                                      child: Row(
-                                          children: [
-                                            Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.only(
-                                                    topLeft: Radius.circular(2),
-                                                    topRight: Radius.circular(4),
-                                                    bottomRight: Radius.circular(4),
-                                                    bottomLeft: Radius.circular(2),
+                                                          ),
+                                                          IntrinsicHeight(
+                                                            child: Container(
+                                                              width: double.infinity,
+                                                              child: Row(
+                                                                  children: [
+                                                                    Container(
+                                                                        margin: EdgeInsets.only( right: 4),
+                                                                        width: 24,
+                                                                        height: 24,
+                                                                        child: Image.asset(
+                                                                          'assets/icons/calorange.png',
+                                                                          fit: BoxFit.fill,
+                                                                        )
+                                                                    ),
+                                                                    Expanded(
+                                                                      child: Container(
+                                                                        width: double.infinity,
+                                                                        child: Text(
+                                                                          'Today',
+                                                                          style: TextStyle(
+                                                                            color: Color(0xFFF59E0B),
+                                                                            fontSize: 12,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ]
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ]
+                                                    ),
                                                   ),
                                                 ),
-                                                margin: EdgeInsets.only( right: 14),
-                                                width: 93,
-                                                height: 98,
-                                                child: ClipRRect(
-                                                    borderRadius: BorderRadius.only(
-                                                      topLeft: Radius.circular(2),
-                                                      topRight: Radius.circular(4),
-                                                      bottomRight: Radius.circular(4),
-                                                      bottomLeft: Radius.circular(2),
+                                                Container(
+                                                  padding: EdgeInsets.only( left: 18, right: 18),
+                                                  width: 52,
+                                                  height: 52,
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                        image: AssetImage('assets/icons/weightorange.png'),
+                                                        fit: BoxFit.cover
                                                     ),
-                                                    child: Image.asset(
-                                                      'assets/icons/king.png',
-                                                      fit: BoxFit.fill,
-                                                    )
-                                                )
+                                                  ),
+
+                                                ),
+                                              ]
+                                          ),
+                                        ),
+                                      ),
+
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => Bruiserpage()),
+    );
+  },
+                                    ),
+
+                                    GestureDetector(
+                                      child: IntrinsicHeight(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Color(0xFFD98E47),
+                                              width: 2,
                                             ),
-                                            IntrinsicHeight(
-                                              child: Container(
-                                                margin: EdgeInsets.only( right: 45),
-                                                width: 101,
-                                                child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Container(
-                                                        margin: EdgeInsets.only( bottom: 12, left: 2),
-                                                        child: Text(
-                                                          'King',
-                                                          style: TextStyle(
-                                                            color: Color(0xFF262626),
-                                                            fontSize: 16,
-                                                          ),
-                                                        ),
+                                            borderRadius: BorderRadius.circular(4),
+                                            color: Color(0xFFFFFFFF),
+                                          ),
+                                          padding: EdgeInsets.all(2),
+                                          width: double.infinity,
+                                          child: Row(
+                                              children: [
+                                                Container(
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.only(
+                                                        topLeft: Radius.circular(2),
+                                                        topRight: Radius.circular(4),
+                                                        bottomRight: Radius.circular(4),
+                                                        bottomLeft: Radius.circular(2),
                                                       ),
-                                                      IntrinsicHeight(
-                                                        child: Container(
-                                                          margin: EdgeInsets.only( bottom: 8),
-                                                          width: double.infinity,
-                                                          child: Row(
-                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                              children: [
-                                                                Container(
-                                                                    width: 12,
-                                                                    height: 12,
-                                                                    child: Image.asset(
-                                                                      'assets/icons/dropframe.png',
-                                                                      fit: BoxFit.fill,
-                                                                    )
-                                                                ),
-                                                                Text(
-                                                                  'Health Check',
-                                                                  style: TextStyle(
-                                                                    color: Color(0xFF737373),
-                                                                    fontSize: 12,
-                                                                  ),
-                                                                ),
-                                                              ]
-                                                          ),
+                                                    ),
+                                                    margin: EdgeInsets.only( right: 14),
+                                                    width: 93,
+                                                    height: 98,
+                                                    child: ClipRRect(
+                                                        borderRadius: BorderRadius.only(
+                                                          topLeft: Radius.circular(2),
+                                                          topRight: Radius.circular(4),
+                                                          bottomRight: Radius.circular(4),
+                                                          bottomLeft: Radius.circular(2),
                                                         ),
-                                                      ),
-                                                      IntrinsicHeight(
-                                                        child: Container(
-                                                          width: double.infinity,
-                                                          child: Row(
-                                                              children: [
-                                                                Container(
-                                                                    margin: EdgeInsets.only( right: 4),
-                                                                    width: 24,
-                                                                    height: 24,
-                                                                    child: Image.asset(
-                                                                      'assets/icons/calorange.png',
-                                                                      fit: BoxFit.fill,
-                                                                    )
-                                                                ),
-                                                                Expanded(
-                                                                  child: Container(
-                                                                    width: double.infinity,
-                                                                    child: Text(
-                                                                      'Today',
+                                                        child: Image.asset(
+                                                          'assets/icons/king.png',
+                                                          fit: BoxFit.fill,
+                                                        )
+                                                    )
+                                                ),
+                                                IntrinsicHeight(
+                                                  child: Container(
+                                                    margin: EdgeInsets.only( right: 45),
+                                                    width: 101,
+                                                    child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Container(
+                                                            margin: EdgeInsets.only( bottom: 12, left: 2),
+                                                            child: Text(
+                                                              'King',
+                                                              style: TextStyle(
+                                                                color: Color(0xFF262626),
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          IntrinsicHeight(
+                                                            child: Container(
+                                                              margin: EdgeInsets.only( bottom: 8),
+                                                              width: double.infinity,
+                                                              child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Container(
+                                                                        width: 12,
+                                                                        height: 12,
+                                                                        child: Image.asset(
+                                                                          'assets/icons/dropframe.png',
+                                                                          fit: BoxFit.fill,
+                                                                        )
+                                                                    ),
+                                                                    Text(
+                                                                      'Health Check',
                                                                       style: TextStyle(
-                                                                        color: Color(0xFFD98E47),
+                                                                        color: Color(0xFF737373),
                                                                         fontSize: 12,
                                                                       ),
                                                                     ),
-                                                                  ),
-                                                                ),
-                                                              ]
+                                                                  ]
+                                                              ),
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                    ]
+                                                          IntrinsicHeight(
+                                                            child: Container(
+                                                              width: double.infinity,
+                                                              child: Row(
+                                                                  children: [
+                                                                    Container(
+                                                                        margin: EdgeInsets.only( right: 4),
+                                                                        width: 24,
+                                                                        height: 24,
+                                                                        child: Image.asset(
+                                                                          'assets/icons/calorange.png',
+                                                                          fit: BoxFit.fill,
+                                                                        )
+                                                                    ),
+                                                                    Expanded(
+                                                                      child: Container(
+                                                                        width: double.infinity,
+                                                                        child: Text(
+                                                                          'Today',
+                                                                          style: TextStyle(
+                                                                            color: Color(0xFFD98E47),
+                                                                            fontSize: 12,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ]
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ]
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: EdgeInsets.only( left: 15, right: 15),
-                                              width: 52,
-                                              height: 52,
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                    image: AssetImage("assets/icons/healthorange.png"),
-                                                    fit: BoxFit.cover
-                                                ),
-                                              ),
+                                                Container(
+                                                  padding: EdgeInsets.only( left: 15, right: 15),
+                                                  width: 52,
+                                                  height: 52,
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                        image: AssetImage("assets/icons/healthorange.png"),
+                                                        fit: BoxFit.cover
+                                                    ),
+                                                  ),
 
-                                            ),
-                                          ]
+                                                ),
+                                              ]
+                                          ),
+                                        ),
                                       ),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => Kingpage()),
+    );
+  },
                                     ),
-                                  ),
-                                ]
+                                  ]
+                              ),
                             ),
                           ),
-                        ),
+
+
                         Container(
                           margin: EdgeInsets.only( bottom: 17, left: 18),
                           child: Text(
