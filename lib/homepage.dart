@@ -53,33 +53,35 @@ Widget build(BuildContext context) {
       child: GNav(
           rippleColor: Colors.grey[300]!,
           hoverColor: Colors.grey[100]!,
-          gap: 8,
-          activeColor: Colors.black,
-          iconSize: 24,
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          duration: Duration(milliseconds: 400),
+          gap: 0,
+          activeColor: Color(0xFFD98F48),
+          iconSize: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          duration: const Duration(milliseconds: 400),
           tabBackgroundColor: Colors.grey[100]!,
+
           color: Colors.black,
           tabs: const [
           GButton(
             icon: LineIcons.home,
             text: 'Home',
+
           ),
-          GButton(
-            icon: LineIcons.heart,
-            text: 'Likes',
-          ),
-            GButton(
-              icon: LineIcons.heart,
-              text: 'Scan',
-            ),
           GButton(
             icon: LineIcons.search,
             text: 'Search',
           ),
+            GButton(
+              icon: LineIcons.qrcode,
+              text: 'Scan',
+            ),
           GButton(
-            icon: LineIcons.user,
-            text: 'Profile',
+            icon: LineIcons.list,
+            text: 'Database',
+          ),
+          GButton(
+            icon: LineIcons.edit,
+            text: 'Settings',
             ),
           ],
           selectedIndex: _selectedIndex,
