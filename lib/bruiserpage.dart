@@ -26,7 +26,7 @@ Widget build(BuildContext context) {
                         IntrinsicHeight(
                           child: Container(
                             margin: EdgeInsets.only( top: 277),
-                            width: 360,
+                            width: 465,
                             child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
