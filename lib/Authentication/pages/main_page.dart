@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:inkombe_flutter/Authentication/pages/login.dart';
 import 'package:inkombe_flutter/Authentication/pages/login_or_register_switch_page.dart';
-import 'package:inkombe_flutter/Authentication/placeholder.dart';
+
 import 'package:inkombe_flutter/homepage.dart';
 
 class MainPageRouter extends StatelessWidget {

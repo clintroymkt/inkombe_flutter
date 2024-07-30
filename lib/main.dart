@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:inkombe_flutter/Authentication/pages/login.dart';
-import 'package:inkombe_flutter/home.dart';
+import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:inkombe_flutter/Authentication/pages/main_page.dart';
 import 'firebase_options.dart';

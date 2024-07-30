@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:inkombe_flutter/Authentication/placeholder.dart';
+import 'package:inkombe_flutter/homepage.dart';
 
 import '../../widgets.dart';
 import '../firebase_auth.dart';
@@ -165,7 +165,7 @@ class _LoginPageState extends State<LoginPage>{
       await _authService.loginWithEmailAndPassword(_emailController.text.trim(),_passwordController.text.trim()).then(
           (value) async {
             if (value == true){
-              nextScreen(context, const HomePage());
+              nextScreen(context, const Homepage());
             } else{
               showSnackBar(context, Colors.redAccent, value);
             }
