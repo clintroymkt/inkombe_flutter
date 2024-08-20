@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:inkombe_flutter/bruiserpage.dart';
 import 'package:inkombe_flutter/kingpage.dart';
 
 import '../services/database_service.dart';
