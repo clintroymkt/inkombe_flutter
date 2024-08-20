@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:inkombe_flutter/services/database_service.dart';
 
 class AuthService{
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -19,9 +20,13 @@ class AuthService{
   Future signUpUserWithEmailAndPassword(String email, String password) async{
     try{
       User user =(await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user!;
+     DatabaseService(uid: user.uid).savingUserData(email);
       return true;
     } on FirebaseAuthException catch (e){
       return(e.message);
     }
   }
+
+
+
 }
