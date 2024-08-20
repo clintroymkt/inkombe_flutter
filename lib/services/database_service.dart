@@ -79,4 +79,13 @@ async {
     return cattleCollection.orderBy("date", descending: true).limit(4).snapshots();
   }
 
+  getSingleCow(docId){
+    return cattleCollection.doc(docId).get().then((DocumentSnapshot doc){
+      final data = doc.data() as Map<String, dynamic>;
+      print(data);
+      return data;
+    });
+  }
+
+
 }

@@ -4,6 +4,7 @@ import '../bruiserpage.dart';
 
 
 class ListCard extends StatefulWidget {
+  final String docId;
   final String title;
   final String date;
   final String imageUri;
@@ -12,7 +13,8 @@ class ListCard extends StatefulWidget {
     super.key,
     required this.title,
     required this.date,
-    required this.imageUri
+    required this.imageUri,
+    required this.docId
   });
 
   @override
@@ -166,7 +168,7 @@ class _ListCardState extends State<ListCard> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Bruiserpage()),
+          MaterialPageRoute(builder: (context) =>  Bruiserpage(docId: widget.docId,)),
         );
       },
 

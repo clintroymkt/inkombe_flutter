@@ -178,7 +178,9 @@ class _HomePageState extends State<HomePage> {
                                                    ListCard(
                                                     title: doc.data()['name'],
                                                     date: doc.data()['date'],
-                                                    imageUri: doc.data()['image']
+                                                    imageUri: doc.data()['image'],
+                                                     docId: doc.id,
+
                                                   )
                                               ]
                                              );
