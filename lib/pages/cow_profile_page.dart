@@ -203,7 +203,7 @@ class _BruiserpageState extends State<Bruiserpage> {
                                                 margin: const EdgeInsets.only(
                                                     bottom: 12, left: 16),
                                                 child: Text(
-                                                  "Age:  ${data['age(years)'].toString()}",
+                                                  "Age:  ${data['age'].toString()}",
                                                   style: const TextStyle(
                                                     color: Color(0xFF000000),
                                                     fontSize: 14,

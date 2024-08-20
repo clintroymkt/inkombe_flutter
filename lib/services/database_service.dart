@@ -42,22 +42,24 @@ class DatabaseService{
 Future createCattle(
     String age,
     String breed,
-    String diet,
+    String sex,
     String diseasesAilments,
     String height,
     String name,
-    String weight)
+    String weight
+    )
 async {
   cattleCollection.add({
-    "age": age,
-    "breed":breed,
-    "diet": diet,
-    "date":'',
-    "diseases/ailments": diseasesAilments,
-    "height(m)": height,
-    "location": '',
     "name":name,
+    "age": age,
     "weight(kg)":weight,
+    "height(m)": height,
+    "breed":breed,
+    "diet": '',
+    "sex": sex,
+    "diseases/ailments": diseasesAilments,
+    "date":'',
+    "location": '',
     'image':'',
     "ownerUid": currentUser?.uid,
 

@@ -299,7 +299,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
     );
   }
   createCow() async{
-    DatabaseService().createCattle(_ageController.text.trim(), _breedController.text.trim(), '', _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim());
+    DatabaseService().createCattle(_ageController.text.trim(), _breedController.text.trim(), _sexController.text.trim(), _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim());
     showSnackBar(context, Colors.greenAccent, "Cow created successfully");
     _ageController.clear();
     _breedController.clear();
