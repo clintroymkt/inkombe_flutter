@@ -176,9 +176,9 @@ class _HomePageState extends State<HomePage> {
                                               children: [
                                                 for (doc in docs)
                                                    ListCard(
-                                                    title: doc.data()['name'],
-                                                    date: doc.data()['date'],
-                                                    imageUri: doc.data()['image'],
+                                                    title: doc.data()['name'].toString()  ,
+                                                    date: doc.data()['date'].toString(),
+                                                    imageUri: doc.data()['image'].toString(),
                                                      docId: doc.id,
 
                                                   )
@@ -234,7 +234,7 @@ class _HomePageState extends State<HomePage> {
                                                       bottomLeft: Radius.circular(2),
                                                     ),
                                                   ),
-                                                  margin: EdgeInsets.only( right: 14),
+                                                  margin: const EdgeInsets.only( right: 14),
                                                   width: 93,
                                                   height: 98,
                                                   child: ClipRRect(
