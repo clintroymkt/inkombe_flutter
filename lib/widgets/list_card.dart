@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../bruiserpage.dart';
+import '../pages/cow_profile_page.dart';
 
 
 class ListCard extends StatefulWidget {

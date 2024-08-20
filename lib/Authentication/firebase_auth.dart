@@ -20,7 +20,7 @@ class AuthService{
   Future signUpUserWithEmailAndPassword(String email, String password) async{
     try{
       User user =(await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user!;
-     DatabaseService(uid: user.uid).savingUserData(email);
+     DatabaseService().savingUserData(email);
       return true;
     } on FirebaseAuthException catch (e){
       return(e.message);
