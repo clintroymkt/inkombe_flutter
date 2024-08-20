@@ -25,7 +25,7 @@ Widget build(BuildContext context) {
                         IntrinsicHeight(
                           child: Container(
                             margin: EdgeInsets.only( top: 277),
-                            width: 360,
+                            width: 465,
                             child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
@@ -86,7 +86,7 @@ Widget build(BuildContext context) {
                                                                   Container(
                                                                     margin: EdgeInsets.only( bottom: 12, left: 16),
                                                                     child: Text(
-                                                                      "Owner: James Chimombe",
+                                                                      "Owner: Clint Mukarakate",
                                                                       style: TextStyle(
                                                                         color: Color(0xFF000000),
                                                                         fontSize: 14,
@@ -162,8 +162,8 @@ Widget build(BuildContext context) {
                                                                       height: 127,
                                                                       child: ClipRRect(
                                                                           borderRadius: BorderRadius.circular(13),
-                                                                          child: Image.network(
-                                                                            "https://i.imgur.com/1tMFzp8.png",
+                                                                          child: Image.asset(
+                                                                            "assets/icons/king.png",
                                                                             fit: BoxFit.fill,
                                                                           )
                                                                       )
@@ -196,7 +196,7 @@ Widget build(BuildContext context) {
                                                                               decoration: BoxDecoration(
                                                                                 borderRadius: BorderRadius.circular(22),
                                                                                 image: DecorationImage(
-                                                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                                                    image: AssetImage("assets/icons/king.png"),
                                                                                     fit: BoxFit.cover
                                                                                 ),
                                                                               ),
@@ -207,8 +207,8 @@ Widget build(BuildContext context) {
                                                                                         margin: EdgeInsets.only( top: 61),
                                                                                         width: 5,
                                                                                         height: 2,
-                                                                                        child: Image.network(
-                                                                                          "https://i.imgur.com/1tMFzp8.png",
+                                                                                        child: Image.asset(
+                                                                                          "assets/icons/king.png",
                                                                                           fit: BoxFit.fill,
                                                                                         )
                                                                                     ),
@@ -222,7 +222,7 @@ Widget build(BuildContext context) {
                                                                               decoration: BoxDecoration(
                                                                                 borderRadius: BorderRadius.circular(22),
                                                                                 image: DecorationImage(
-                                                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                                                    image: AssetImage("assets/icons/king.pngassets/icons/king.png"),
                                                                                     fit: BoxFit.cover
                                                                                 ),
                                                                               ),
