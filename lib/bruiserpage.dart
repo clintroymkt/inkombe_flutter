@@ -163,8 +163,8 @@ Widget build(BuildContext context) {
                                                                       height: 127,
                                                                       child: ClipRRect(
                                                                           borderRadius: BorderRadius.circular(13),
-                                                                          child: Image.network(
-                                                                            "https://i.imgur.com/1tMFzp8.png",
+                                                                          child: Image.asset(
+                                                                            "assets/icons/bruiser.png",
                                                                             fit: BoxFit.fill,
                                                                           )
                                                                       )
@@ -197,7 +197,7 @@ Widget build(BuildContext context) {
                                                                               decoration: BoxDecoration(
                                                                                 borderRadius: BorderRadius.circular(22),
                                                                                 image: DecorationImage(
-                                                                                    image: NetworkImage("https://i.imgur.com/1tMFzp8.png"),
+                                                                                    image: AssetImage("assets/icons/Bruiser.png"),
                                                                                     fit: BoxFit.cover
                                                                                 ),
                                                                               ),
