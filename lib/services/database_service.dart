@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:math';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class DatabaseService{
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
-  final String? uid;
-  DatabaseService({this.uid});
+
 
   final CollectionReference userCollection =
   FirebaseFirestore.instance.collection("User");
@@ -20,13 +20,13 @@ class DatabaseService{
   Future savingUserData(
       String email,
       ) async {
-    return await userCollection.doc(uid).set({
+    return await userCollection.doc(currentUser?.uid).set({
       "fullName": "",
       "description": "",
       "email": email,
       "cattle": [],
       "profilePic": "",
-      "uid": uid,
+      "uid": currentUser?.uid,
       'reg': false, //whether account is verified or not
       'admin' : false //super user access
     });
@@ -63,7 +63,7 @@ async {
     "owner":owner,
     "weight(kg)":weight,
     "model_id": "",
-    "owner_uid": uid
+    "owner_uid": currentUser?.uid
   }
   ).then((docRef)=>{
       userCollection.doc(userDocId).update(
@@ -76,13 +76,12 @@ async {
   });
 }
   getCattleUpdates() {
-    return cattleCollection.orderBy("date", descending: true).limit(4).snapshots();
+    return cattleCollection.where('ownerUid', isEqualTo: currentUser?.uid).orderBy("date", descending: true).snapshots();
   }
 
   getSingleCow(docId){
     return cattleCollection.doc(docId).get().then((DocumentSnapshot doc){
       final data = doc.data() as Map<String, dynamic>;
-      print(data);
       return data;
     });
   }
