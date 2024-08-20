@@ -5,6 +5,8 @@ import 'package:inkombe_flutter/homepage.dart';
 
 import '../../widgets.dart';
 import '../firebase_auth.dart';
+import '../../services/database_service.dart';
+
 
 class RegisterPage extends StatefulWidget{
   final VoidCallback showLoginPage;
