@@ -5,20 +5,21 @@ import 'package:flutter/widgets.dart';
 
 import '../services/database_service.dart';
 import '../widgets/list_card.dart';
+import 'create_cow_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class DatabasePage extends StatefulWidget {
+  const DatabasePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<DatabasePage> createState() => _DatabasePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DatabasePageState extends State<DatabasePage> {
 
   Stream<QuerySnapshot>? updates;
 
   preloadUpdates(){
-    updates = DatabaseService().getCattleUpdates();
+    updates = DatabaseService().getAllCattle();
   }
 
   @override
@@ -55,103 +56,55 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IntrinsicHeight(
-                            child: Container(
-                              margin: const EdgeInsets.only( bottom: 61, left: 11, right: 11),
-                              width: double.infinity,
-                              child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Clint Mukarakate ',
-                                      style: TextStyle(
-                                        color: Color(0xFF000000),
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                    Container(
-                                        width: 15,
-                                        height: 19,
-                                        child: Image.asset(
-                                          'assets/icons/bell.png',
-                                          fit: BoxFit.fill,
-                                        )
-                                    ),
-                                  ]
-                              ),
-                            ),
-                          ),
                           Container(
-                            margin: EdgeInsets.only( bottom: 28, left: 22),
-                            child: Text(
-                              'Home',
-                              style: TextStyle(
-                                color: Color(0xFF000000),
-                                fontSize: 28,
-                              ),
-                            ),
-                          ),
-                          IntrinsicHeight(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(100),
-                                color: Color(0x33D98E47),
-                              ),
-                              padding: EdgeInsets.all(5),
-                              margin: EdgeInsets.only( bottom: 44, left: 19, right: 19),
-                              width: double.infinity,
-                              child: Row(
-                                  children: [
-                                    IntrinsicHeight(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(100),
-                                          color: Color(0xFFD98E47),
-                                        ),
-                                        padding: EdgeInsets.symmetric(vertical: 15),
-                                        margin: EdgeInsets.only( right: 33),
-                                        width: 100,
-                                        child: Column(
-                                            children: [
-                                              Text(
-                                                'Daily',
-                                                style: TextStyle(
-                                                  color: Color(0xFFFFFFFF),
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ]
+                            margin: const EdgeInsets.only( bottom: 17, left: 18),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    color: Color(0xFF000000),
+                                    fontSize: 24,
+                                  ),
+
+                                ),
+
+                                const SizedBox(height: 30,),
+
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                                  child: GestureDetector(
+                                    onTap: ()  {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) =>  const CreateCowPage()),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                          color: Color(0xFFd98f48),
+                                          borderRadius: BorderRadius.circular(12)
+                                      ),
+
+                                      child: const Center(
+                                        child: Text('Create Cow', style: TextStyle(color:Colors.white),
                                         ),
                                       ),
                                     ),
-                                    Text(
-                                      'Weekly',
-                                      style: TextStyle(
-                                        color: Color(0xFF000000),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        width: double.infinity,
-                                        child: SizedBox(),
-                                      ),
-                                    ),
-                                    Text(
-                                      'Monthly',
-                                      style: TextStyle(
-                                        color: Color(0xFF000000),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ]
-                              ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 30,),
+                              ],
                             ),
                           ),
+
+
                           Container(
                             margin: const EdgeInsets.only( bottom: 16, left: 20),
                             child: const Text(
-                              'Recent Updates ',
+                              'Cattle ',
                               style: TextStyle(
                                 color: Color(0xFF000000),
                                 fontSize: 24,
@@ -176,7 +129,7 @@ class _HomePageState extends State<HomePage> {
                                                 ListCard(
                                                   title: doc.data()['name'],
                                                   date: doc.data()['date'],
-                                                  imageUri: doc.data()['image'],
+                                                  imageUri: doc?.data()['image'],
                                                   docId: doc.id,
 
                                                 )
@@ -189,169 +142,8 @@ class _HomePageState extends State<HomePage> {
                           ),
 
 
-                          Container(
-                            margin: const EdgeInsets.only( bottom: 17, left: 18),
-                            child: const Text(
-                              'To-Do List',
-                              style: TextStyle(
-                                color: Color(0xFF000000),
-                                fontSize: 24,
-                              ),
-                            ),
-                          ),
-                          IntrinsicHeight(
-                            child: Container(
-                              color: const Color(0xFFFFFFFF),
-                              padding: const EdgeInsets.only( left: 16, right: 16),
-                              margin: const EdgeInsets.only( bottom: 44),
-                              width: double.infinity,
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    IntrinsicHeight(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: const Color(0xFFE5E5E5),
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(4),
-                                          color: const Color(0xFFFFFFFF),
-                                        ),
-                                        padding: const EdgeInsets.all(2),
-                                        margin: const EdgeInsets.only( top: 20),
-                                        width: double.infinity,
-                                        child: Row(
-                                            children: [
-                                              Container(
-                                                  decoration: const BoxDecoration(
-                                                    borderRadius: BorderRadius.only(
-                                                      topLeft: Radius.circular(2),
-                                                      topRight: Radius.circular(4),
-                                                      bottomRight: Radius.circular(4),
-                                                      bottomLeft: Radius.circular(2),
-                                                    ),
-                                                  ),
-                                                  margin: EdgeInsets.only( right: 14),
-                                                  width: 93,
-                                                  height: 98,
-                                                  child: ClipRRect(
-                                                      borderRadius: const BorderRadius.only(
-                                                        topLeft: Radius.circular(2),
-                                                        topRight: Radius.circular(4),
-                                                        bottomRight: Radius.circular(4),
-                                                        bottomLeft: Radius.circular(2),
-                                                      ),
-                                                      child: Image.asset(
-                                                        'assets/icons/dippic.png',
-                                                        fit: BoxFit.fill,
-                                                      )
-                                                  )
-                                              ),
-                                              Expanded(
-                                                child: IntrinsicHeight(
-                                                  child: Container(
-                                                    margin: EdgeInsets.only( right: 4),
-                                                    width: double.infinity,
-                                                    child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Container(
-                                                            margin: EdgeInsets.only( bottom: 12, left: 2),
-                                                            child: Text(
-                                                              'Dipping',
-                                                              style: TextStyle(
-                                                                color: Color(0xFF262626),
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          IntrinsicHeight(
-                                                            child: Container(
-                                                              margin: EdgeInsets.only( bottom: 8, left: 6, right: 6),
-                                                              width: double.infinity,
-                                                              child: Row(
-                                                                  children: [
-                                                                    Container(
-                                                                        margin: EdgeInsets.only( right: 8),
-                                                                        width: 12,
-                                                                        height: 12,
-                                                                        child: Image.asset(
-                                                                          'assets/icons/dropframe.png',
-                                                                          fit: BoxFit.fill,
-                                                                        )
-                                                                    ),
-                                                                    Expanded(
-                                                                      child: Container(
-                                                                        width: double.infinity,
-                                                                        child: Text(
-                                                                          '8 cows',
-                                                                          style: TextStyle(
-                                                                            color: Color(0xFF737373),
-                                                                            fontSize: 12,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ]
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          IntrinsicHeight(
-                                                            child: Container(
-                                                              width: double.infinity,
-                                                              child: Row(
-                                                                  children: [
-                                                                    Container(
-                                                                        margin: EdgeInsets.only( right: 4),
-                                                                        width: 24,
-                                                                        height: 24,
-                                                                        child: Image.asset(
-                                                                          'assets/icons/calorange.png',
-                                                                          fit: BoxFit.fill,
-                                                                        )
-                                                                    ),
-                                                                    Expanded(
-                                                                      child: Container(
-                                                                        width: double.infinity,
-                                                                        child: Text(
-                                                                          'In 6 days',
-                                                                          style: TextStyle(
-                                                                            color: Color(0xFFA3A3A3),
-                                                                            fontSize: 12,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ]
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ]
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Container(
-                                                padding: EdgeInsets.only( left: 16, right: 16),
-                                                width: 52,
-                                                height: 52,
-                                                decoration: BoxDecoration(
-                                                  image: DecorationImage(
-                                                      image: AssetImage("assets/icons/dropgrey.png"),
-                                                      fit: BoxFit.cover
-                                                  ),
-                                                ),
 
-                                              ),
-                                            ]
-                                        ),
-                                      ),
-                                    ),
-                                  ]
-                              ),
-                            ),
-                          ),
+
 
                         ],
                       )

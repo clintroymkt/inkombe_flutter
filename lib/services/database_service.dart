@@ -40,42 +40,45 @@ class DatabaseService{
 
 //   create cattle
 Future createCattle(
-    String userDocId,
-    Int age,
+    String age,
     String breed,
     String diet,
     String diseasesAilments,
-    Float height,
-    String location,
-    String modelId,
+    String height,
     String name,
-    String owner,
     String weight)
 async {
   cattleCollection.add({
     "age": age,
     "breed":breed,
     "diet": diet,
+    "date":'',
     "diseases/ailments": diseasesAilments,
     "height(m)": height,
-    "location": location,
+    "location": '',
     "name":name,
-    "owner":owner,
     "weight(kg)":weight,
-    "model_id": "",
-    "owner_uid": currentUser?.uid
+    'image':'',
+    "ownerUid": currentUser?.uid,
+
   }
   ).then((docRef)=>{
-      userCollection.doc(userDocId).update(
-        {
-          "cattle":FieldValue.arrayUnion([docRef.id]) //add cattle to user document
-          //don't forget to remove when deleting cattle
-        }
-      )
+    // userDocId = userCollection.doc().
+    //   userCollection.where(
+    //     {
+    //       "cattle":FieldValue.arrayUnion([docRef.id]) //add cattle to user document
+    //       //don't forget to remove when deleting cattle
+    //     }
+    //   )
+
 
   });
 }
   getCattleUpdates() {
+    return cattleCollection.where('ownerUid', isEqualTo: currentUser?.uid).orderBy("date", descending: true).limit(3).snapshots();
+  }
+
+  getAllCattle() {
     return cattleCollection.where('ownerUid', isEqualTo: currentUser?.uid).orderBy("date", descending: true).snapshots();
   }
 
