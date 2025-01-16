@@ -37,14 +37,14 @@ dependencies:
   cupertino_icons: ^1.0.6
   get: ^4.3.8
   camera: ^0.9.4+3
-  tflite: ^1.1.2
-  tflite_flutter: ^0.10.4
+  tflite_flutter: ^0.11.0
   firebase_app_installations: ^0.3.0+3
   firebase_auth: ^5.1.2
   cloud_firestore: ^5.2.1
   grouped_list: ^6.0.0
   google_nav_bar: ^5.0.6
   line_icons: ^2.0.3
+  image: ^3.2.2
 
 dev_dependencies:
   flutter_test:
@@ -85,6 +85,7 @@ flutter:
     - assets/icons/search_24px.png
     - assets/icons/Task completion.png
     - assets/icons/weightorange.png
+    - assets/facenosetracker.tflite
 
   # To add assets to your application, add an assets section, like this:
   # assets:

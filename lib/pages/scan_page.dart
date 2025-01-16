@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:tflite/tflite.dart';
-import 'package:inkombe_flutter/main.dart';
+import 'package:image/image.dart' as imgLib;
+import '../utils/landmark_extractor.dart';
+import '../main.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -11,74 +13,124 @@ class ScanPage extends StatefulWidget {
 }
 
 class _ScanPageState extends State<ScanPage> {
-  bool isWorking = false;
-  String result = '';
   CameraController? cameraController;
   CameraImage? imgCamera;
-
-  void initCamera() {
-    cameraController = CameraController(cameras![0], ResolutionPreset.medium);
-    cameraController!.initialize().then((value) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        cameraController!.startImageStream((imageFromStream) {
-          if (!isWorking) {
-            isWorking = true;
-            imgCamera = imageFromStream;
-            runModelOnStream();
-          }
-        });
-      });
-    });
-  }
-
-  Future<void> loadModel() async {
-    await Tflite.loadModel(
-      model: "assets/model.tflite",
-      labels: "assets/labels.txt",
-    );
-  }
+  bool isProcessing = false;
+  String result = '';
+  late LandMarkModelRunner landMarkModelRunner;
 
   @override
   void initState() {
     super.initState();
-    loadModel();
+    landMarkModelRunner = LandMarkModelRunner();
+    initCamera();
   }
 
-  Future<void> runModelOnStream() async {
-    if (imgCamera != null) {
-      var recognitions = await Tflite.runModelOnFrame(
-        bytesList: imgCamera!.planes.map((plane) {
-          return plane.bytes;
-        }).toList(),
-        imageHeight: imgCamera!.height,
-        imageWidth: imgCamera!.width,
-        imageMean: 127.5,
-        imageStd: 127.5,
-        rotation: 90,
-        numResults: 2,
-        threshold: 0.1,
-        asynch: true,
-      );
-      result = '';
+  void initCamera() async {
+    cameraController = CameraController(cameras![0], ResolutionPreset.medium);
+    await cameraController!.initialize().then((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
 
-      recognitions!.forEach((response) {
-        result += response["label"] + "  " + (response["confidence"] as double).toStringAsFixed(2) + "\n\n";
-      });
+  Future<void> captureAndProcessImage() async {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      print("Camera is not initialized.");
+      return;
+    }
 
+    if (isProcessing) {
+      print("Image processing is already in progress.");
+      return; // Prevent multiple simultaneous invocations
+    }
+
+    try {
       setState(() {
-        result;
+        isProcessing = true;
+        result = "Processing image...";
       });
-      isWorking = false;
+
+      // Step 1: Capture an image
+      print("Capturing image...");
+      XFile? imageFile;
+      try {
+        imageFile = await cameraController!.takePicture();
+        print("Image captured at path: ${imageFile.path}");
+      } catch (e) {
+        throw Exception("Failed to capture image: $e");
+      }
+
+      if (imageFile == null) {
+        throw Exception("Image file is null. Camera might not have captured the image.");
+      }
+
+      // Step 2: Read the image bytes
+      final bytes = await imageFile.readAsBytes();
+      if (bytes.isEmpty) {
+        throw Exception("Image bytes are empty. The file might be corrupted.");
+      }
+      print("Image bytes length: ${bytes.length}");
+
+      // Step 3: Decode the image
+      final imgLib.Image? decodedImage = imgLib.decodeImage(bytes);
+      if (decodedImage == null) {
+        throw Exception("Error decoding image. Check if the image format is supported.");
+      }
+      print("Decoded image size: ${decodedImage.width}x${decodedImage.height}");
+
+      // Step 4: Resize the image
+      final imgLib.Image resizedImage = imgLib.copyResize(decodedImage, width: 120, height: 120);
+      print("Resized image size: ${resizedImage.width}x${resizedImage.height}");
+
+      // Step 5: Convert to PNG format
+      final pngBytes = Uint8List.fromList(imgLib.encodePng(resizedImage));
+      if (pngBytes.isEmpty) {
+        throw Exception("Failed to convert resized image to PNG bytes.");
+      }
+      print("PNG bytes length: ${pngBytes.length}");
+
+      // Step 6: Run the model
+      try {
+        print("Running the model...");
+        final output = await landMarkModelRunner.run(pngBytes);
+
+        if (output.isEmpty || output.any((row) => row.isEmpty)) {
+          throw Exception("Model returned empty or invalid output.");
+        }
+
+        print("Model output received: ${output.length} rows of ${output[0].length} columns.");
+
+        // Format output to display multiple rows
+        String outputString = output
+            .map((row) => row.map((value) => value.toStringAsFixed(2)).join(", "))
+            .join("; ");
+
+        setState(() {
+          result = "Model Output:\n$outputString";
+        });
+      } catch (e, stackTrace) {
+        throw Exception("Model execution failed: $e \n $stackTrace");
+      }
+
+    } catch (e, stackTrace) {
+      print("Error processing image: $e");
+      print(stackTrace);
+      setState(() {
+        result = "Error processing image.";
+      });
+    } finally {
+      setState(() {
+        isProcessing = false;
+      });
     }
   }
 
+
+
+
   @override
   void dispose() {
-    Tflite.close();
     cameraController?.dispose();
     super.dispose();
   }
@@ -107,28 +159,24 @@ class _ScanPageState extends State<ScanPage> {
                     ),
                   ),
                   Center(
-                    child: TextButton(
-                      onPressed: () {
-                        initCamera();
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 35.0),
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 35.0),
+                      height: 270.0,
+                      width: 360.0,
+                      child: cameraController == null ||
+                          !cameraController!.value.isInitialized
+                          ? const SizedBox(
                         height: 270.0,
                         width: 360.0,
-                        child: imgCamera == null
-                            ? Container(
-                          height: 270.0,
-                          width: 360.0,
-                          child: const Icon(
-                            Icons.photo_camera_front,
-                            color: Colors.amberAccent,
-                            size: 40.0,
-                          ),
-                        )
-                            : AspectRatio(
-                          aspectRatio: cameraController!.value.aspectRatio,
-                          child: CameraPreview(cameraController!),
+                        child: Icon(
+                          Icons.photo_camera_front,
+                          color: Colors.amberAccent,
+                          size: 40.0,
                         ),
+                      )
+                          : AspectRatio(
+                        aspectRatio: cameraController!.value.aspectRatio,
+                        child: CameraPreview(cameraController!),
                       ),
                     ),
                   ),
@@ -136,13 +184,25 @@ class _ScanPageState extends State<ScanPage> {
               ),
               Center(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 55.0),
+                  margin: const EdgeInsets.only(top: 20.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await captureAndProcessImage();
+                    },
+                    icon: const Icon(Icons.camera),
+                    label: const Text("Capture & Process"),
+                  ),
+                ),
+              ),
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 20.0),
                   child: SingleChildScrollView(
                     child: Text(
                       result,
                       style: const TextStyle(
                         backgroundColor: Colors.white54,
-                        fontSize: 25.0,
+                        fontSize: 20.0,
                         color: Colors.black,
                       ),
                       textAlign: TextAlign.center,
