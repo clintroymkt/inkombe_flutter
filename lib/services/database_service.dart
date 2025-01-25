@@ -3,10 +3,16 @@ import 'dart:ffi';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path/path.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
+
 
 
 class DatabaseService{
+  final storageRef = FirebaseStorage.instance;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
 
@@ -46,7 +52,8 @@ Future createCattle(
     String diseasesAilments,
     String height,
     String name,
-    String weight
+    String weight,
+    image
     )
 async {
   cattleCollection.add({
@@ -90,6 +97,39 @@ async {
       return data;
     });
   }
-
+  uploadImage(img,  String age,
+      String breed,
+      String sex,
+      String diseasesAilments,
+      String height,
+      String name,
+      String weight) async {
+    var random = Random();
+    var rand = random.nextInt(1000000000);
+    // Give the image a random name
+    String name = "image:$rand";
+    try {
+      final ext = extension(img.path);
+      final image = storageRef.ref("cow-images").child('$name$ext');
+      await image.putFile(img);
+      String url = await image.getDownloadURL();
+      print(url);
+      createCattle(  age,
+           breed,
+           sex,
+           diseasesAilments,
+           height,
+           name,
+           weight,
+      url
+      );
+      return ("Uploaded image");
+      print("Uploaded image");
+      // ignore: nullable_type_in_catch_clause
+    } on FirebaseException catch (e) {
+      print(e);
+      return ("error");
+    }
+  }
 
 }

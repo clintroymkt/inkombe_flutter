@@ -88,7 +88,7 @@ class _DatabasePageState extends State<DatabasePage> {
                                       ),
 
                                       child: const Center(
-                                        child: Text('Create Cow', style: TextStyle(color:Colors.white),
+                                        child: Text('Add Cow', style: TextStyle(color:Colors.white),
                                         ),
                                       ),
                                     ),
@@ -129,7 +129,7 @@ class _DatabasePageState extends State<DatabasePage> {
                                                 ListCard(
                                                   title: doc.data()['name'],
                                                   date: doc.data()['date'],
-                                                  imageUri: doc?.data()['image'],
+                                                  imageUri: doc.data()['image'],
                                                   docId: doc.id,
 
                                                 )

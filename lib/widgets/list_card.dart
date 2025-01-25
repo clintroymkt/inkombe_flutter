@@ -104,7 +104,7 @@ class _ListCardState extends State<ListCard> {
                                         )
                                     ),
                                     const Text(
-                                      'Weight Update',
+                                      'New Cow',
                                       style: TextStyle(
                                         color: Color(0xFF737373),
                                         fontSize: 12,
@@ -133,7 +133,7 @@ class _ListCardState extends State<ListCard> {
                                       child: SizedBox(
                                         width: double.infinity,
                                         child: Text(
-                                          'Today',
+                                          '',
                                           style: TextStyle(
                                             color: Color(0xFFF59E0B),
                                             fontSize: 12,

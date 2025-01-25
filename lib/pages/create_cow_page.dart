@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:inkombe_flutter/widgets.dart';
-
+import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
 import '../widgets/list_card.dart';
 
@@ -18,7 +20,8 @@ class CreateCowPage extends StatefulWidget {
 
 class _CreateCowPageState extends State<CreateCowPage> {
   final formKey = GlobalKey<FormState>();
-
+  late File? _image ;
+  final picker = ImagePicker();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
@@ -57,6 +60,17 @@ class _CreateCowPageState extends State<CreateCowPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              InkWell(
+
+                child: CircleAvatar(
+                  radius: 48, // Image radius
+                  backgroundImage: NetworkImage('imageUrl'),
+                ),
+                onTap:(){
+                  getImage();
+            },
+              ),
               Expanded(
                 child: Container(
                   color: Color(0xFFFFFFFF),
@@ -72,7 +86,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
                             child: Column(
                               children: [
                                 const Text(
-                                  'Create Cow',
+                                  'Add new Cow',
                                   style: TextStyle(
                                     color: Color(0xFF000000),
                                     fontSize: 24,
@@ -86,6 +100,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal:20.0),
+
                                         child: Container(
                                           decoration: BoxDecoration(
                                               color:Colors.grey[200],
@@ -299,7 +314,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
     );
   }
   createCow() async{
-    DatabaseService().createCattle(_ageController.text.trim(), _breedController.text.trim(), _sexController.text.trim(), _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim());
+    DatabaseService().uploadImage(File, _ageController.text.trim(), _breedController.text.trim(), _sexController.text.trim(), _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim());
     showSnackBar(context, Colors.greenAccent, "Cow created successfully");
     _ageController.clear();
     _breedController.clear();
@@ -307,5 +322,18 @@ class _CreateCowPageState extends State<CreateCowPage> {
     _heightController.clear();
     _nameController.clear();
     _weightController.clear();
+  }
+
+  getImage() async {
+    // You can also change the source to gallery like this: "source: ImageSource.camera"
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        showSnackBar(
+            context, Colors.orange, "Please pick image to create post");
+      }
+    });
   }
 }

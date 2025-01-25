@@ -20,13 +20,13 @@ class _HomepageState extends State<Homepage> {
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
     Text(
-      'Likes',
+      'Search',
       style: optionStyle,
     ),
     ScanPage(),
     DatabasePage(),
     Text(
-      'Profile',
+      'Profile Settings',
       style: optionStyle,
     ),
   ];

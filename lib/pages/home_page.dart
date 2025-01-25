@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Clint Mukarakate ',
+                                      'Welcome User',
                                       style: TextStyle(
                                         color: Color(0xFF000000),
                                         fontSize: 20,
