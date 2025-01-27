@@ -11,16 +11,29 @@ import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
 import '../widgets/list_card.dart';
 
-class CreateCowPage extends StatefulWidget {
-  const CreateCowPage({super.key});
+class CreateCowPageCopy extends StatefulWidget {
+  final File? image;
+  final List faceEmbeddings;
+  final List noseEmbeddings;
+  const CreateCowPageCopy({super.key,
+    required this.image,
+    required this.faceEmbeddings,
+    required this.noseEmbeddings
+
+  });
+
 
   @override
-  State<CreateCowPage> createState() => _CreateCowPageState();
+  State<CreateCowPageCopy> createState() => _CreateCowPageCopyState(
+
+  );
 }
 
-class _CreateCowPageState extends State<CreateCowPage> {
+class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
   final formKey = GlobalKey<FormState>();
   late File? _image = null ;
+  List? faceEmbeddings;
+  List? noseEmbeddings;
   final picker = ImagePicker();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
@@ -40,6 +53,12 @@ class _CreateCowPageState extends State<CreateCowPage> {
   void initState(){
     preloadUpdates();
     super.initState();
+    setState(() {
+      _image = widget.image;
+      noseEmbeddings= widget.noseEmbeddings;
+      faceEmbeddings = widget.faceEmbeddings;
+    });
+
   }
 
   @override
@@ -63,7 +82,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          constraints: BoxConstraints.expand(),
+          constraints: const BoxConstraints.expand(),
           color: Color(0xFFFFFFFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +345,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
     );
   }
   createCow() async{
-    DatabaseService().uploadImage(File, _ageController.text.trim(), _breedController.text.trim(), _sexController.text.trim(), _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim(), [], []);
+    DatabaseService().uploadImage(_image, _ageController.text.trim(), _breedController.text.trim(), _sexController.text.trim(), _diseasesController.text.trim(), _heightController.text.trim(), _nameController.text.trim(), _weightController.text.trim(), faceEmbeddings!, noseEmbeddings!);
     showSnackBar(context, Colors.greenAccent, "Cow created successfully");
     _ageController.clear();
     _breedController.clear();

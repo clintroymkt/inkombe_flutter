@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as imgLib;
 
@@ -14,7 +15,8 @@ class LandMarkModelRunner {
   Future<void> _loadModel() async {
     try {
       final options = InterpreterOptions()..useNnApiForAndroid = true;
-      _interpreter = await Interpreter.fromAsset('assets/facenosetracker.tflite', options: options);
+      _interpreter = await Interpreter.fromAsset('assets/facenosetracker.tflite'
+          , options: options);
       print("Model loaded successfully.");
       print("Input tensor shape: ${_interpreter.getInputTensor(0).shape}");
       print("Input tensors: ${_interpreter.getInputTensors()}");
@@ -26,7 +28,7 @@ class LandMarkModelRunner {
   }
 
   /// Run the model on the provided `pngBytes`
-  Future<List<List<double>>> run(Uint8List pngBytes) async {
+  Future<List> run(Uint8List pngBytes) async {
     try {
       // Ensure the interpreter is initialized
       if (_interpreter == null) {
@@ -39,21 +41,31 @@ class LandMarkModelRunner {
       // Get output tensor shapes
       final outputShapes = _interpreter.getOutputTensors().map((tensor) => tensor.shape).toList();
 
-      print("Expected output shapes: $outputShapes");
+      // print("Expected output shapes: $outputShapes");
 
       // Prepare output buffers to match model output shapes
-      final outputs = outputShapes.map((shape) => List<double>.filled(shape.reduce((a, b) => a * b), 0.0)).toList();
+      final outputs = outputShapes.map((shape) {
+        // Create a 2D list with shape [3, 8]
+        return List.generate(3, (_) => List<double>.filled(shape[1], 0.0));
+      }).toList();
+
+      // print('Outputs are $outputs \n');
+
+      // Convert outputs list to a map
+      final outputMap = {for (int i = 0; i < outputs.length; i++) i: outputs[i]};
+
 
       // Run inference
-      _interpreter.runForMultipleInputs([input], {for (int i = 0; i < outputs.length; i++) i: outputs[i]});
+      _interpreter.runForMultipleInputs([input], outputMap);
 
-      return outputs;
+
+      // Return the reshaped outputs
+      return outputs; // Assuming the first output is the one you need
     } catch (e, stackTrace) {
       print("Error running model: $e \n $stackTrace");
       rethrow;
     }
   }
-
 
   /// Prepare input tensor from `pngBytes`
   List<List<List<List<double>>>> _prepareInput(Uint8List pngBytes) {

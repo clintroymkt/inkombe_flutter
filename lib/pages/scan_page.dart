@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imgLib;
+import 'package:inkombe_flutter/widgets.dart';
 import '../utils/landmark_extractor.dart';
 import '../main.dart';
+import 'create_cow_page_copy.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -17,6 +20,10 @@ class _ScanPageState extends State<ScanPage> {
   CameraImage? imgCamera;
   bool isProcessing = false;
   String result = '';
+  late List<dynamic> arrayResult;
+  List faceEmbeddings = [];
+  List noseEmbeddings = [];
+  late final File? pngFile;
   late LandMarkModelRunner landMarkModelRunner;
 
   @override
@@ -101,14 +108,39 @@ class _ScanPageState extends State<ScanPage> {
 
         print("Model output received: ${output.length} rows of ${output[0].length} columns.");
 
+        arrayResult = output;
         // Format output to display multiple rows
-        String outputString = output
-            .map((row) => row.map((value) => value.toStringAsFixed(2)).join(", "))
-            .join("; ");
+        // String outputString = output
+        //     .map((row) => row.map((value) => value.toStringAsFixed(4)).join(", "))
+        //     .join("; ");
+        //
+        // setState(() {
+        //   result = outputString;
+        // });
 
+        // for (List x in array_result){
+        //     print(x);
+        // }
+        // position 0 is bounding box output
+        // position 1 is face regression output
+        // position 2 is classification output
+        // position 3 is face regression output
         setState(() {
-          result = "Model Output:\n$outputString";
+          faceEmbeddings = arrayResult[1][0];
+          noseEmbeddings = arrayResult[3][0];
         });
+
+        final tempDir = Directory.systemTemp;
+        final tempFilePath = "${tempDir.path}/resized_image.png";
+        pngFile = File(tempFilePath);
+        await pngFile?.writeAsBytes(pngBytes);
+
+        print("PNG file saved at: $tempFilePath");
+
+
+
+
+        print(result);
       } catch (e, stackTrace) {
         throw Exception("Model execution failed: $e \n $stackTrace");
       }
@@ -137,83 +169,111 @@ class _ScanPageState extends State<ScanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(title: const Text("Cow Breed Recognizer Module")),
-        body: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/backscreen.png"),
-              fit: BoxFit.fill,
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Camera feed with aspect ratio maintained
+          cameraController == null || !cameraController!.value.isInitialized
+              ? Container(
+            color: Colors.black, // Fallback color while the camera initializes
+            child: const Center(
+              child: Icon(
+                Icons.photo_camera_front,
+                color: Colors.amberAccent,
+                size: 40.0,
+              ),
+            ),
+          )
+              : Center(
+            child: FittedBox(
+              fit: BoxFit.cover, // Ensures the camera feed fills the screen
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height /
+                    cameraController!.value.aspectRatio,
+                child: AspectRatio(
+                  aspectRatio: cameraController!.value.aspectRatio,
+                  child: CameraPreview(cameraController!),
+                ),
+              ),
             ),
           ),
-          child: Column(
+          // Overlay UI components
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Stack(
-                children: [
-                  Center(
-                    child: Container(
-                      height: 320.0,
-                      width: 360.0,
-                      child: Image.asset("assets/frame.jpg"),
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 35.0),
-                      height: 270.0,
-                      width: 360.0,
-                      child: cameraController == null ||
-                          !cameraController!.value.isInitialized
-                          ? const SizedBox(
-                        height: 270.0,
-                        width: 360.0,
-                        child: Icon(
-                          Icons.photo_camera_front,
-                          color: Colors.amberAccent,
-                          size: 40.0,
-                        ),
-                      )
-                          : AspectRatio(
-                        aspectRatio: cameraController!.value.aspectRatio,
-                        child: CameraPreview(cameraController!),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Center(
+              // App bar
+              SafeArea(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 20.0),
-                  child: ElevatedButton.icon(
+                  padding: const EdgeInsets.all(8.0),
+                  child: const Text(
+                    "Cow Breed Recognizer Module",
+                    style: TextStyle(
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              // Capture button and results
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await captureAndProcessImage();
+                      if (faceEmbeddings == [] && noseEmbeddings == []){
+                        showSnackBar(context, Colors.redAccent, "Error getting embeddings from image! \n Try again");
+                      } else
+                      {
+                         showSnackBar(context, Colors.greenAccent, "Successful");
+
+                         Navigator.push(
+                           context,
+                           MaterialPageRoute(
+                             builder: (context) => CreateCowPageCopy(
+                               image: pngFile,
+                               faceEmbeddings: faceEmbeddings,
+                               noseEmbeddings: noseEmbeddings,
+                             ),
+                           ),
+                         );
+
+                      }
+                    },
+                    icon: const Icon(Icons.camera),
+                    label: const Text("Add Cow"),
+                  ),
+                  ElevatedButton.icon(
                     onPressed: () async {
                       await captureAndProcessImage();
                     },
-                    icon: const Icon(Icons.camera),
-                    label: const Text("Capture & Process"),
+                    icon: const Icon(Icons.search),
+                    label: const Text("Identify Cow"),
                   ),
-                ),
-              ),
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 20.0),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      result,
-                      style: const TextStyle(
-                        backgroundColor: Colors.white54,
-                        fontSize: 20.0,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+
+                  // Result display
+                  // SingleChildScrollView(
+                  //   child: Text(
+                  //     result,
+                  //     style: const TextStyle(
+                  //       backgroundColor: Colors.white54,
+                  //       fontSize: 20.0,
+                  //       color: Colors.black,
+                  //     ),
+                  //     textAlign: TextAlign.center,
+                  //   ),
+                  // ),
+                ],
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+
+
 }
