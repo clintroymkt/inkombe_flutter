@@ -23,7 +23,7 @@ class _ScanPageState extends State<ScanPage> {
   late List<dynamic> arrayResult;
   List faceEmbeddings = [];
   List noseEmbeddings = [];
-  late final File? pngFile;
+  late File? pngFile;
   late LandMarkModelRunner landMarkModelRunner;
 
   @override
@@ -32,6 +32,8 @@ class _ScanPageState extends State<ScanPage> {
     landMarkModelRunner = LandMarkModelRunner();
     initCamera();
   }
+
+
 
   void initCamera() async {
     cameraController = CameraController(cameras![0], ResolutionPreset.medium);
