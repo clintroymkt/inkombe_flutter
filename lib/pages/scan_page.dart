@@ -7,6 +7,7 @@ import 'package:inkombe_flutter/widgets.dart';
 import '../utils/cosine_similarity_check.dart';
 import '../utils/landmark_extractor.dart';
 import '../main.dart';
+import 'cow_profile_page.dart';
 import 'create_cow_page_copy.dart';
 
 class ScanPage extends StatefulWidget {
@@ -273,7 +274,22 @@ class _ScanPageState extends State<ScanPage> {
                           faceEmbeddings: faceEmbeddings,
                           noseEmbeddings: noseEmbeddings,
                           threshold: 0.85,
-                        );
+                        ).then((match){
+                          if (match == null){
+                            showSnackBar(context, Colors.redAccent, "No match found! \n Try again");
+                          } else {
+                            showSnackBar(context, Colors.greenAccent, "Match found! \n ${match["id"]}");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CowProfilePage(
+                                    docId: match["id"],
+                                ),
+                              ),
+                            );
+                            print(match);
+                          }
+                        });
                       });
 
                     },
