@@ -168,7 +168,7 @@ class _ListCardState extends State<ListCard> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) =>  Bruiserpage(docId: widget.docId,)),
+          MaterialPageRoute(builder: (context) =>  CowProfilePage(docId: widget.docId,)),
         );
       },
 
