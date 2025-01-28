@@ -46,7 +46,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
   Stream<QuerySnapshot>? updates;
 
   preloadUpdates(){
-    updates = DatabaseService().getAllCattle();
+    updates = DatabaseService().getAllSingleUserCattle();
   }
 
   @override

@@ -39,6 +39,8 @@ class DatabaseService {
     return snapshot;
   }
 
+
+
 //   create cattle
   Future createCattle(
       String age,
@@ -84,8 +86,12 @@ class DatabaseService {
         .limit(3)
         .snapshots();
   }
-
-  getAllCattle() {
+  getAllCattle(){
+    return cattleCollection
+        .orderBy("date", descending:true)
+        .snapshots();
+  }
+  getAllSingleUserCattle() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
         .orderBy("date", descending: true)

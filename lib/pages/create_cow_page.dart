@@ -33,7 +33,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
   Stream<QuerySnapshot>? updates;
 
   preloadUpdates(){
-    updates = DatabaseService().getAllCattle();
+    updates = DatabaseService().getAllSingleUserCattle();
   }
 
   @override

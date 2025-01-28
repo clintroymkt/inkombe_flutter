@@ -33,6 +33,21 @@ class _ScanPageState extends State<ScanPage> {
     initCamera();
   }
 
+  // collect garbage
+  @override
+  void dispose(){
+    super.dispose();
+    cameraController?.dispose();
+    imgCamera;
+    isProcessing;
+    result;
+    arrayResult;
+    faceEmbeddings;
+    noseEmbeddings;
+    pngFile;
+    landMarkModelRunner.dispose();
+  }
+
 
 
   void initCamera() async {
@@ -163,11 +178,7 @@ class _ScanPageState extends State<ScanPage> {
 
 
 
-  @override
-  void dispose() {
-    cameraController?.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +253,6 @@ class _ScanPageState extends State<ScanPage> {
                              ),
                            ),
                          );
-
                       }
                     },
                     icon: const Icon(Icons.camera),

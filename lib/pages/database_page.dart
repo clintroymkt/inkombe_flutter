@@ -19,7 +19,7 @@ class _DatabasePageState extends State<DatabasePage> {
   Stream<QuerySnapshot>? updates;
 
   preloadUpdates(){
-    updates = DatabaseService().getAllCattle();
+    updates = DatabaseService().getAllSingleUserCattle();
   }
 
   @override
