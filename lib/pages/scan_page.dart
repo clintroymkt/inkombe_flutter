@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imgLib;
 import 'package:inkombe_flutter/widgets.dart';
+import '../utils/cosine_similarity_check.dart';
 import '../utils/landmark_extractor.dart';
 import '../main.dart';
 import 'create_cow_page_copy.dart';
@@ -21,10 +22,11 @@ class _ScanPageState extends State<ScanPage> {
   bool isProcessing = false;
   String result = '';
   late List<dynamic> arrayResult;
-  List faceEmbeddings = [];
-  List noseEmbeddings = [];
+  List<double> faceEmbeddings = [];
+  List<double> noseEmbeddings = [];
   late File? pngFile;
   late LandMarkModelRunner landMarkModelRunner;
+  CosineSimilarityCheck similarityChecker = CosineSimilarityCheck();
 
   @override
   void initState() {
@@ -260,24 +262,24 @@ class _ScanPageState extends State<ScanPage> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () async {
-                      await captureAndProcessImage();
+                      await captureAndProcessImage().then((_){
+                        if (faceEmbeddings == [] && noseEmbeddings == []){
+                          showSnackBar(context, Colors.redAccent, "Error getting embeddings from image! \n Try again");
+                        } else
+                        {
+                          showSnackBar(context, Colors.greenAccent, "Successful");
+                        }
+                        similarityChecker.checkSimilarity(
+                          faceEmbeddings: faceEmbeddings,
+                          noseEmbeddings: noseEmbeddings,
+                          threshold: 0.85,
+                        );
+                      });
+
                     },
                     icon: const Icon(Icons.search),
                     label: const Text("Identify Cow"),
                   ),
-
-                  // Result display
-                  // SingleChildScrollView(
-                  //   child: Text(
-                  //     result,
-                  //     style: const TextStyle(
-                  //       backgroundColor: Colors.white54,
-                  //       fontSize: 20.0,
-                  //       color: Colors.black,
-                  //     ),
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // ),
                 ],
               ),
             ],
