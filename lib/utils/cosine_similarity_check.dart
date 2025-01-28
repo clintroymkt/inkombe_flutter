@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
@@ -46,7 +45,7 @@ class CosineSimilarityCheck {
   /// Compute cosine similarity
   double cosineSimilarity(List<double> embedding1, List<double> embedding2) {
     if (embedding1.length != embedding2.length) {
-      throw ArgumentError("Embeddings must have the same length");
+      return -1;
     }
 
     double dotProduct = 0.0;
