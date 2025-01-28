@@ -17,6 +17,7 @@ class AuthService{
   Future signOutUser() async {
     FirebaseAuth.instance.signOut();
   }
+
   Future signUpUserWithEmailAndPassword(String email, String password) async{
     try{
       User user =(await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user!;
