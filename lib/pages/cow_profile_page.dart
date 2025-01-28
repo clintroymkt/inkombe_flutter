@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
-class Bruiserpage extends StatefulWidget {
+class CowProfilePage extends StatefulWidget {
   final String docId;
-  const Bruiserpage({super.key, required this.docId});
+  const CowProfilePage({super.key, required this.docId});
 
   @override
-  State<Bruiserpage> createState() => _BruiserpageState();
+  State<CowProfilePage> createState() => _CowProfilePageState();
 }
 
-class _BruiserpageState extends State<Bruiserpage> {
+class _CowProfilePageState extends State<CowProfilePage> {
   Map<String, dynamic>? data;
 
   Future<Map<String, dynamic>> preloadData() async {
