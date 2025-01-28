@@ -119,10 +119,10 @@ class DatabaseService {
     var random = Random();
     var rand = random.nextInt(1000000000);
     // Give the image a random name
-    String name = "image:$rand";
+    String image_name = "image:$rand";
     try {
       final ext = extension(img.path);
-      final image = storageRef.ref("cow-images").child('$name$ext');
+      final image = storageRef.ref("cow-images").child('$image_name$ext');
       await image.putFile(img);
       String url = await image.getDownloadURL();
       print(url);
