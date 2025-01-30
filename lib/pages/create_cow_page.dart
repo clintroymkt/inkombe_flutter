@@ -294,17 +294,9 @@ class _CreateCowPageState extends State<CreateCowPage> {
                                     ],
                                   ),
                                 ),
-
                               ],
                             ),
                           ),
-
-
-
-
-
-
-
                         ],
                       )
                   ),
