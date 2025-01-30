@@ -9,6 +9,7 @@ import '../utils/landmark_extractor.dart';
 import '../main.dart';
 import 'cow_profile_page.dart';
 import 'create_cow_page_copy.dart';
+import '../utils/image_processor.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -27,13 +28,17 @@ class _ScanPageState extends State<ScanPage> {
   List<double> noseEmbeddings = [];
   late File? pngFile;
   late LandMarkModelRunner landMarkModelRunner;
+  late ImageProcessor imageProcessor;
   CosineSimilarityCheck similarityChecker = CosineSimilarityCheck();
+
+
 
   @override
   void initState() {
     super.initState();
     landMarkModelRunner = LandMarkModelRunner();
     initCamera();
+    imageProcessor = ImageProcessor(landMarkModelRunner: landMarkModelRunner);
   }
 
   // collect garbage
@@ -91,74 +96,30 @@ class _ScanPageState extends State<ScanPage> {
       }
 
       // Step 2: Read the image bytes
-      final bytes = await imageFile.readAsBytes();
-      if (bytes.isEmpty) {
-        throw Exception("Image bytes are empty. The file might be corrupted.");
-      }
-      print("Image bytes length: ${bytes.length}");
-
-      // Step 3: Decode the image
-      final imgLib.Image? decodedImage = imgLib.decodeImage(bytes);
-      if (decodedImage == null) {
-        throw Exception("Error decoding image. Check if the image format is supported.");
-      }
-      print("Decoded image size: ${decodedImage.width}x${decodedImage.height}");
-
-      // Step 4: Resize the image
-      final imgLib.Image resizedImage = imgLib.copyResize(decodedImage, width: 120, height: 120);
-      print("Resized image size: ${resizedImage.width}x${resizedImage.height}");
-
-      // Step 5: Convert to PNG format
-      final pngBytes = Uint8List.fromList(imgLib.encodePng(resizedImage));
-      if (pngBytes.isEmpty) {
-        throw Exception("Failed to convert resized image to PNG bytes.");
-      }
-      print("PNG bytes length: ${pngBytes.length}");
 
       // Step 6: Run the model
       try {
         print("Running the model...");
-        final output = await landMarkModelRunner.run(pngBytes);
+        final output = await imageProcessor.processImage(imageFile);
 
-        if (output.isEmpty || output.any((row) => row.isEmpty)) {
-          throw Exception("Model returned empty or invalid output.");
-        }
-
-        print("Model output received: ${output.length} rows of ${output[0].length} columns.");
-
-        arrayResult = output;
-        // Format output to display multiple rows
-        // String outputString = output
-        //     .map((row) => row.map((value) => value.toStringAsFixed(4)).join(", "))
-        //     .join("; ");
-        //
-        // setState(() {
-        //   result = outputString;
-        // });
-
-        // for (List x in array_result){
-        //     print(x);
-        // }
         // position 0 is bounding box output
         // position 1 is face regression output
         // position 2 is classification output
         // position 3 is face regression output
         setState(() {
-          faceEmbeddings = arrayResult[1][0];
-          noseEmbeddings = arrayResult[3][0];
+          faceEmbeddings = output["faceEmbeddings"]!;
+          noseEmbeddings = output["noseEmbeddings"]!;
+          pngFile = output["file"]; // Update the PNG file
+          result = "Image processed successfully!";
         });
 
-        final tempDir = Directory.systemTemp;
-        final tempFilePath = "${tempDir.path}/resized_image.png";
-        pngFile = File(tempFilePath);
-        await pngFile?.writeAsBytes(pngBytes);
 
-        print("PNG file saved at: $tempFilePath");
+        pngFile = pngFile;
 
 
 
 
-        print(result);
+        print(output);
       } catch (e, stackTrace) {
         throw Exception("Model execution failed: $e \n $stackTrace");
       }
