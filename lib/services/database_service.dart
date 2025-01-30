@@ -63,7 +63,6 @@ class DatabaseService {
       "diet": '',
       "sex": sex,
       "diseases/ailments": diseasesAilments,
-      "date": '',
       "location": '',
       'image': image,
       'faceEmbeddings':faceEmbeddings,
