@@ -22,6 +22,12 @@ class ListCard extends StatefulWidget {
 }
 
 class _ListCardState extends State<ListCard> {
+
+  @override
+  void initState(){
+    chechDate();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -93,7 +99,7 @@ class _ListCardState extends State<ListCard> {
                               width: double.infinity,
                               child: Row(
                                   mainAxisAlignment: MainAxisAlignment
-                                      .spaceBetween,
+                                      .start,
                                   children: [
                                     SizedBox(
                                         width: 12,
@@ -176,6 +182,10 @@ class _ListCardState extends State<ListCard> {
       },
 
     );
+  }
+  void chechDate(){
+    print(widget.date);
+    print(widget.imageUri);
   }
 
 }

@@ -65,7 +65,7 @@ class DatabaseService {
       "diseases/ailments": diseasesAilments,
       "date": '',
       "location": '',
-      'image': '',
+      'image': image,
       'faceEmbeddings':faceEmbeddings,
       'noseEmbeddings':noseEmbeddings,
       "ownerUid": currentUser?.uid,
@@ -84,7 +84,7 @@ class DatabaseService {
   getCattleUpdates() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
-        .orderBy("date", descending: true)
+        .orderBy("dateAdded", descending: true)
         .limit(3)
         .snapshots();
   }
