@@ -73,7 +73,7 @@ class _ListCardState extends State<ListCard> {
                 IntrinsicHeight(
                   child: Container(
                     margin: const EdgeInsets.only(right: 39),
-                    width: 108,
+                    width: 200,
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -115,6 +115,9 @@ class _ListCardState extends State<ListCard> {
                             ),
 
                           ),
+
+
+                          // Date added part
                           IntrinsicHeight(
                             child: SizedBox(
                               width: double.infinity,
@@ -122,19 +125,19 @@ class _ListCardState extends State<ListCard> {
                                   children: [
                                     Container(
                                         margin: const EdgeInsets.only(right: 4),
-                                        width: 24,
+                                        width: 10,
                                         height: 24,
                                         child: Image.asset(
                                           'assets/icons/calorange.png',
                                           fit: BoxFit.fill,
                                         )
                                     ),
-                                    const Expanded(
+                                    Expanded(
                                       child: SizedBox(
                                         width: double.infinity,
                                         child: Text(
-                                          '',
-                                          style: TextStyle(
+                                          widget.date != '' ? widget.date: 'NA',
+                                          style: const TextStyle(
                                             color: Color(0xFFF59E0B),
                                             fontSize: 12,
                                           ),

@@ -19,7 +19,7 @@ class _DatabasePageState extends State<DatabasePage> {
   Stream<QuerySnapshot>? updates;
 
   preloadUpdates(){
-    updates = DatabaseService().getAllSingleUserCattle();
+    updates = DatabaseService().getCattleUpdates();
   }
 
   @override
@@ -128,7 +128,7 @@ class _DatabasePageState extends State<DatabasePage> {
                                               for (doc in docs)
                                                 ListCard(
                                                   title: doc.data()['name'],
-                                                  date: doc.data()['date'],
+                                                  date: doc.data()['dateAdded'],
                                                   imageUri: doc.data()['image'],
                                                   docId: doc.id,
 

@@ -44,10 +44,8 @@ class _ScanPageState extends State<ScanPage> {
     imgCamera;
     isProcessing;
     result;
-    arrayResult;
     faceEmbeddings;
     noseEmbeddings;
-    pngFile;
     landMarkModelRunner.dispose();
   }
 

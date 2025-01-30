@@ -52,7 +52,8 @@ class DatabaseService {
       String weight,
       image,
       List faceEmbeddings,
-      List noseEmbeddings) async {
+      List noseEmbeddings,
+      String date) async {
     cattleCollection.add({
       "name": name,
       "age": age,
@@ -68,6 +69,7 @@ class DatabaseService {
       'faceEmbeddings':faceEmbeddings,
       'noseEmbeddings':noseEmbeddings,
       "ownerUid": currentUser?.uid,
+      "dateAdded": date,
           }).then((docRef) => {
           // userDocId = userCollection.doc().
           //   userCollection.where(
@@ -91,11 +93,19 @@ class DatabaseService {
         .orderBy("date", descending:true)
         .snapshots();
   }
+  // for identifying cattle we need static snapshot
   getAllSingleUserCattle() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
         .orderBy("date", descending: true)
         .get();
+  }
+
+  streamAllSingleUserCattle() {
+    return cattleCollection
+        .where('ownerUid', isEqualTo: currentUser?.uid)
+        .orderBy("date", descending: true)
+        .snapshots();
   }
 
   getSingleCow(docId) {
@@ -126,8 +136,9 @@ class DatabaseService {
       await image.putFile(img);
       String url = await image.getDownloadURL();
       print(url);
+      DateTime _date = DateTime.now();
       createCattle(age, breed, sex, diseasesAilments, height, name, weight, url,
-          faceEmbeddings, noseEmbeddings);
+          faceEmbeddings, noseEmbeddings, _date.toString());
       return ("Uploaded image");
       print("Uploaded image");
       // ignore: nullable_type_in_catch_clause

@@ -30,24 +30,15 @@ class _CreateCowPageState extends State<CreateCowPage> {
   final _sexController = TextEditingController();
   final _diseasesController = TextEditingController();
 
-  Stream<QuerySnapshot>? updates;
-
-  preloadUpdates(){
-    updates = DatabaseService().getAllSingleUserCattle();
-  }
 
   @override
   void initState(){
-    preloadUpdates();
     super.initState();
   }
 
   @override
   void dispose(){
     super.dispose();
-    preloadUpdates();
-    updates;
-    _image;
     _nameController.dispose();
     _ageController.dispose();
     _weightController.dispose();

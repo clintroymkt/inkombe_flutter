@@ -60,7 +60,6 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
   @override
   void dispose(){
     super.dispose();
-    _image;
     _nameController.dispose();
     _ageController.dispose();
     _weightController.dispose();
