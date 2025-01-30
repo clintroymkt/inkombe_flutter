@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
+                                const Text(
                                   'Welcome User',
                                   style: TextStyle(
                                     color: Color(0xFF000000),
@@ -80,8 +80,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.only(bottom: 28, left: 22),
-                          child: Text(
+                          margin: const EdgeInsets.only(bottom: 28, left: 22),
+                          child: const Text(
                             'Home',
                             style: TextStyle(
                               color: Color(0xFF000000),
@@ -133,16 +133,16 @@ class _HomePageState extends State<HomePage> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(100),
-            color: _selectedIndex == index ? Color(0xFFD98E47) : Colors.transparent,
+            color: _selectedIndex == index ? const Color(0xFFD98E47) : Colors.transparent,
           ),
-          padding: EdgeInsets.symmetric(vertical: 15),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           width: 100,
           child: Column(
             children: [
               Text(
                 title,
                 style: TextStyle(
-                  color: _selectedIndex == index ? Color(0xFFFFFFFF) : Color(0xFF000000),
+                  color: _selectedIndex == index ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
                   fontSize: 14,
                 ),
               ),
@@ -159,9 +159,9 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return const DailyTab();
       case 1:
-        return PlaceholderWidget(icon: Icons.construction, text: 'We are working on it',);
+        return const PlaceholderWidget(icon: Icons.construction, text: 'We are working on it',);
       case 2:
-        return PlaceholderWidget(icon: Icons.construction, text: 'We are working on it',);
+        return const PlaceholderWidget(icon: Icons.construction, text: 'We are working on it',);
       default:
         return Center(child: Text('Select a tab'));
     }
