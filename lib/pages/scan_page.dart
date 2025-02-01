@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as imgLib;
 import 'package:inkombe_flutter/widgets.dart';
 import '../utils/cosine_similarity_check.dart';
 import '../utils/landmark_extractor.dart';
