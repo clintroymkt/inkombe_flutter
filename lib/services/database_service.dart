@@ -96,7 +96,7 @@ class DatabaseService {
   getAllSingleUserCattle() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
-        .orderBy("date", descending: true)
+        // .orderBy("date", descending: true)
         .get();
   }
 

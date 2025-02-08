@@ -61,8 +61,8 @@ class _CreateCowPageState extends State<CreateCowPage> {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          constraints: BoxConstraints.expand(),
-          color: Color(0xFFFFFFFF),
+          constraints: const BoxConstraints.expand(),
+          color: const Color(0xFFFFFFFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -225,7 +225,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                       child: Padding(
-                                        padding: EdgeInsets.only(left: 10.0),
+                                        padding: const EdgeInsets.only(left: 10.0),
                                         child: TextFormField(
                                           controller: _breedController,
                                           obscureText: false,
@@ -276,7 +276,7 @@ class _CreateCowPageState extends State<CreateCowPage> {
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                       child: Padding(
-                                        padding: EdgeInsets.only(left: 10.0),
+                                        padding: const EdgeInsets.only(left: 10.0),
                                         child: TextFormField(
                                           controller: _diseasesController,
                                           obscureText: false,

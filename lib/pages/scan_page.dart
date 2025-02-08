@@ -114,10 +114,6 @@ class _ScanPageState extends State<ScanPage> {
 
         pngFile = pngFile;
 
-
-
-
-        print(output);
       } catch (e, stackTrace) {
         throw Exception("Model execution failed: $e \n $stackTrace");
       }

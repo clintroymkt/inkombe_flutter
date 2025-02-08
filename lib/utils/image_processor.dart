@@ -31,7 +31,7 @@ class ImageProcessor {
       print("Decoded image size: ${decodedImage.width}x${decodedImage.height}");
 
       // Step 3: Resize the image
-      final imgLib.Image resizedImage = imgLib.copyResize(decodedImage, width: 120, height: 120);
+      final imgLib.Image resizedImage = imgLib.copyResizeCropSquare(decodedImage, 120);
       print("Resized image size: ${resizedImage.width}x${resizedImage.height}");
 
       // Step 4: Convert to PNG format
@@ -52,6 +52,8 @@ class ImageProcessor {
       // Step 6: Extract embeddings
       final faceEmbeddings = output[1][0]; // Face embeddings
       final noseEmbeddings = output[3][0]; // Nose embeddings
+
+
 
       // Step 7: Save the resized image to a temporary file
       final tempDir = Directory.systemTemp;
