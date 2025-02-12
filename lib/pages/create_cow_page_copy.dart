@@ -185,7 +185,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                                 controller: _heightController,
                                                 obscureText: false,
                                               keyboardType: TextInputType.number,
-                                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                              inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
                                                 decoration:const InputDecoration(
                                                     border: InputBorder.none,
                                                     hintText: 'Height(m)'
