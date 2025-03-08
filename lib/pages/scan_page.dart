@@ -176,7 +176,7 @@ class _ScanPageState extends State<ScanPage> {
                 child: Container(
                   padding: const EdgeInsets.all(8.0),
                   child: const Text(
-                    "Cow Breed Recognizer Module",
+                    "Cow Recognizer Module",
                     style: TextStyle(
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold,
