@@ -27,6 +27,8 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
+
 dependencies:
   flutter:
     sdk: flutter
@@ -48,7 +50,7 @@ dependencies:
   google_nav_bar: ^5.0.6
   line_icons: ^2.0.3
   image: ^3.2.2
-  adv_camera: ^3.1.0
+#  adv_camera: ^3.1.0
 
 dev_dependencies:
   flutter_test:
