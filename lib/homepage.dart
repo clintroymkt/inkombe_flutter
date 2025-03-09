@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:inkombe_flutter/pages/database_page.dart';
 import 'package:inkombe_flutter/pages/home_screen/home_page.dart';
+import 'package:inkombe_flutter/pages/new_scan_page.dart';
 import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:line_icons/line_icons.dart';
 
@@ -25,10 +26,7 @@ class _HomepageState extends State<Homepage> {
     ),
     ScanPage(),
     DatabasePage(),
-    Text(
-      'Profile Settings',
-      style: optionStyle,
-    ),
+    NewScanPage()
   ];
 
   @override
