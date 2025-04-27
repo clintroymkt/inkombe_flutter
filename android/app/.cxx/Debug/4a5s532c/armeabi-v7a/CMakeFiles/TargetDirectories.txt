@@ -1,0 +1,2 @@
+C:/Users/giftw/Documents/inkombe_flutter/android/app/.cxx/Debug/4a5s532c/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/giftw/Documents/inkombe_flutter/android/app/.cxx/Debug/4a5s532c/armeabi-v7a/CMakeFiles/rebuild_cache.dir

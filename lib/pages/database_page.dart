@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -17,9 +18,12 @@ class DatabasePage extends StatefulWidget {
 class _DatabasePageState extends State<DatabasePage> {
 
   Stream<QuerySnapshot>? updates;
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
 
   preloadUpdates(){
     updates = DatabaseService().getCattleUpdates();
+    print(currentUser?.uid);
   }
 
   @override
@@ -41,15 +45,15 @@ class _DatabasePageState extends State<DatabasePage> {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          constraints: BoxConstraints.expand(),
-          color: Color(0xFFFFFFFF),
+          constraints: const BoxConstraints.expand(),
+          color: const Color(0xFFFFFFFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Container(
-                  color: Color(0xFFFFFFFF),
-                  padding: EdgeInsets.only( top: 41),
+                  color: const Color(0xFFFFFFFF),
+                  padding: const EdgeInsets.only( top: 41),
                   width: double.infinity,
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -75,15 +79,15 @@ class _DatabasePageState extends State<DatabasePage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                                   child: GestureDetector(
                                     onTap: ()  {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) =>  const CreateCowPage()),
-                                      );
+                                      // Navigator.push(
+                                      //   context,
+                                      //   MaterialPageRoute(builder: (context) =>  const CreateCowPage()),
+                                      // );
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
-                                          color: Color(0xFFd98f48),
+                                          color: const Color(0xFFd98f48),
                                           borderRadius: BorderRadius.circular(12)
                                       ),
 
@@ -94,13 +98,10 @@ class _DatabasePageState extends State<DatabasePage> {
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 30,),
                               ],
                             ),
                           ),
-
-
                           Container(
                             margin: const EdgeInsets.only( bottom: 16, left: 20),
                             child: const Text(
@@ -131,7 +132,6 @@ class _DatabasePageState extends State<DatabasePage> {
                                                   date: doc.data()['dateAdded'],
                                                   imageUri: doc.data()['image'],
                                                   docId: doc.id,
-
                                                 )
                                             ]
                                         );
@@ -140,11 +140,6 @@ class _DatabasePageState extends State<DatabasePage> {
                                     })
                             ),
                           ),
-
-
-
-
-
                         ],
                       )
                   ),

@@ -4,12 +4,13 @@ import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
   /// Fetch all user cattle data and check similarity against new embeddings
-  Future<Map<String, dynamic>?> checkSimilarity({
-    required List<double> faceEmbeddings,
-    required List<double> noseEmbeddings,
+  Future<List<Map<String, dynamic>>?> checkSimilarity({
+    required List<List<double>> faceEmbeddingsList,
+    required List<List<double>> noseEmbeddingsList,
     double faceWeight = 0.6,
     double noseWeight = 0.4,
-    double threshold = 0.8,
+    double highThreshold = 0.8,
+    double lowThreshold = 0.7,
   }) async {
     try {
       QuerySnapshot cattleSnapshot = await DatabaseService().getAllSingleUserCattle();
@@ -18,6 +19,7 @@ class CosineSimilarityCheck {
         print("No stored cattle found.");
         return null;
       }
+
       List<double> getListFromFirestore(dynamic value) {
         if (value == null) return []; // Handle null case
         if (value is List) {
@@ -25,7 +27,6 @@ class CosineSimilarityCheck {
         }
         return []; // If not a list, return empty
       }
-
 
       List<Map<String, dynamic>> storedCows = cattleSnapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -36,14 +37,29 @@ class CosineSimilarityCheck {
         };
       }).toList();
 
-      return compareCowEmbeddings(
-        newFaceEmbedding: faceEmbeddings,
-        newNoseEmbedding: noseEmbeddings,
+      List<Map<String, dynamic>> highMatches = compareCowEmbeddings(
+        newFaceEmbeddingsList: faceEmbeddingsList,
+        newNoseEmbeddingsList: noseEmbeddingsList,
         storedCows: storedCows,
         faceWeight: faceWeight,
         noseWeight: noseWeight,
-        threshold: threshold,
+        threshold: highThreshold,
       );
+
+      if (highMatches.isNotEmpty) {
+        return highMatches;
+      }
+
+      List<Map<String, dynamic>> lowMatches = compareCowEmbeddings(
+        newFaceEmbeddingsList: faceEmbeddingsList,
+        newNoseEmbeddingsList: noseEmbeddingsList,
+        storedCows: storedCows,
+        faceWeight: faceWeight,
+        noseWeight: noseWeight,
+        threshold: lowThreshold,
+      );
+
+      return lowMatches;
     } catch (e) {
       print("Error fetching cattle data: $e");
       return null;
@@ -77,58 +93,46 @@ class CosineSimilarityCheck {
   }
 
   /// Compare embeddings with stored data
-  Map<String, dynamic>? compareCowEmbeddings({
-    required List<double> newFaceEmbedding,
-    required List<double> newNoseEmbedding,
+  List<Map<String, dynamic>> compareCowEmbeddings({
+    required List<List<double>> newFaceEmbeddingsList,
+    required List<List<double>> newNoseEmbeddingsList,
     required List<Map<String, dynamic>> storedCows,
     required double faceWeight,
     required double noseWeight,
     required double threshold,
   }) {
-    double bestCombinedSimilarity = -1;
-    Map<String, dynamic>? bestMatch;
+    List<Map<String, dynamic>> matches = [];
 
     for (Map<String, dynamic> cow in storedCows) {
-      print(cow);
       List<double> storedFaceEmbedding = cow["faceEmbeddings"];
-      print(storedFaceEmbedding);
-
       List<double> storedNoseEmbedding = cow["noseEmbeddings"];
 
-      print('/n');
-
-      print(newFaceEmbedding);
-
-
-
-      // Ensure embeddings are not empty
       if (storedFaceEmbedding.isEmpty || storedNoseEmbedding.isEmpty) {
         print("Skipping cow ${cow['id']} - missing embeddings");
         continue; // Skip this cow if embeddings are missing
       }
 
-      double faceSimilarity = cosineSimilarity(newFaceEmbedding, storedFaceEmbedding);
-      double noseSimilarity = cosineSimilarity(newNoseEmbedding, storedNoseEmbedding);
+      double faceSimilarity = 0.0;
+      double noseSimilarity = 0.0;
 
-      // Compute weighted similarity
+      for (int i = 0; i < newFaceEmbeddingsList.length; i++) {
+        faceSimilarity += cosineSimilarity(newFaceEmbeddingsList[i], storedFaceEmbedding);
+        noseSimilarity += cosineSimilarity(newNoseEmbeddingsList[i], storedNoseEmbedding);
+      }
+
+      faceSimilarity /= newFaceEmbeddingsList.length;
+      noseSimilarity /= newNoseEmbeddingsList.length;
+
       double combinedSimilarity = (faceSimilarity * faceWeight) + (noseSimilarity * noseWeight);
 
-      if (combinedSimilarity >= bestCombinedSimilarity) {
-        bestCombinedSimilarity = combinedSimilarity;
-        bestMatch = {
+      if (combinedSimilarity >= threshold) {
+        matches.add({
           "id": cow["id"],
           "combinedSimilarity": combinedSimilarity,
-        };
+        });
       }
     }
 
-    if (bestMatch != null && bestCombinedSimilarity >= threshold) {
-      print("Best match found: ${bestMatch['id']} with similarity $bestCombinedSimilarity");
-      return bestMatch;
-    } else {
-      print("No match found.");
-      return null;
-    }
+    return matches;
   }
-
 }

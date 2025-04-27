@@ -1,10 +1,18 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as imgLib;
 
 class LandMarkModelRunner {
-  late final Interpreter _interpreter;
+  Interpreter? _interpreter;
+  static const int BATCH_SIZE = 3;
+  static const int IMAGE_SIZE = 120;
+  static const int CHANNELS = 3;
+
+  bool _isInitialized = false;
+  bool _isDisposed = false;
+  final Completer<void> _initializationCompleter = Completer<void>();
 
   /// Constructor to load the model
   LandMarkModelRunner() {
@@ -13,96 +21,123 @@ class LandMarkModelRunner {
 
   /// Load the TensorFlow Lite model
   Future<void> _loadModel() async {
+    if (_isDisposed) return;
+
     try {
       final options = InterpreterOptions()..useNnApiForAndroid = true;
-      _interpreter = await Interpreter.fromAsset('assets/facenosetracker.tflite'
-          , options: options);
-      print("Model loaded successfully.");
-      print("Input tensor shape: ${_interpreter.getInputTensor(0).shape}");
-      print("Input tensors: ${_interpreter.getInputTensors()}");
-      print("Output tensors: ${_interpreter.getOutputTensors()}");
-    } catch (e) {
-      print("Error loading model: $e");
-      rethrow;
+      _interpreter = await Interpreter.fromAsset(
+        'assets/facenosetracker.tflite',
+        options: options,
+      );
+
+      _validateModel();
+      _isInitialized = true;
+      _initializationCompleter.complete();
+
+      debugPrint("Model loaded successfully");
+      debugPrint("Input details: ${_interpreter?.getInputTensors()}");
+      debugPrint("Output details: ${_interpreter?.getOutputTensors()}");
+    } catch (e, stackTrace) {
+      _initializationCompleter.completeError(e);
+      debugPrint("Failed to load model: $e\n$stackTrace");
+      throw Exception("Failed to load model: $e");
     }
   }
 
-  /// Run the model on the provided `pngBytes`
-  Future<List> run(Uint8List pngBytes) async {
+  void _validateModel() {
+    if (_interpreter == null) throw Exception("Interpreter is null");
+
+    final inputTensors = _interpreter!.getInputTensors();
+    if (inputTensors.isEmpty) throw Exception("No input tensors found");
+
+    final outputTensors = _interpreter!.getOutputTensors();
+    if (outputTensors.isEmpty) throw Exception("No output tensors found");
+
+    debugPrint("Model validation successful");
+  }
+
+  Future<List<List<List<double>>>> run(List<Uint8List> pngBytesList) async {
+    if (_isDisposed) throw Exception("Model runner has been disposed");
+    if (pngBytesList.length != BATCH_SIZE) {
+      throw ArgumentError('Exactly $BATCH_SIZE images required');
+    }
+
     try {
-      // Ensure the interpreter is initialized
-      if (_interpreter == null) {
-        throw Exception("Interpreter is not initialized.");
+      await _initializationCompleter.future;
+      if (!_isInitialized || _interpreter == null) {
+        throw Exception("Interpreter is not initialized");
       }
 
-      // Prepare input tensor
-      final input = _prepareInput(pngBytes);
+      // 1. Prepare input
+      final input = _prepareBatchInput(pngBytesList);
 
-      // Get output tensor shapes
-      final outputShapes = _interpreter.getOutputTensors().map((tensor) => tensor.shape).toList();
+      // 2. Prepare outputs with proper typing
+      final outputTensors = _interpreter!.getOutputTensors();
+      if (outputTensors.isEmpty) throw Exception("No output tensors found");
 
-      // print("Expected output shapes: $outputShapes");
+      // Create properly typed output buffers
+      final outputs = outputTensors.map((tensor) {
+        final shape = tensor.shape;
+        if (shape == null || shape.length < 2) {
+          throw Exception("Invalid output tensor shape: $shape");
+        }
 
-      // Prepare output buffers to match model output shapes
-      final outputs = outputShapes.map((shape) {
-        // Create a 2D list with shape [3, 8]
-        return List.generate(3, (_) => List<double>.filled(shape[1], 0.0));
+        return List<List<double>>.generate(
+          BATCH_SIZE,
+              (_) => List<double>.filled(shape[1], 0.0),
+        );
       }).toList();
 
-      // print('Outputs are $outputs \n');
+      // 3. Create properly typed output map
+      final outputMap = <int, Object>{};
+      for (int i = 0; i < outputs.length; i++) {
+        outputMap[i] = outputs[i];
+      }
 
-      // Convert outputs list to a map
-      final outputMap = {for (int i = 0; i < outputs.length; i++) i: outputs[i]};
+      // 4. Run inference
+      _interpreter!.runForMultipleInputs([input], outputMap);
 
-
-      // Run inference
-      _interpreter.runForMultipleInputs([input], outputMap);
-
-
-      // Return the reshaped outputs
-      return outputs; // Assuming the first output is the one you need
+      return outputs;
     } catch (e, stackTrace) {
-      print("Error running model: $e \n $stackTrace");
-      rethrow;
+      debugPrint("Error running model: $e\n$stackTrace");
+      throw Exception("Error running model: $e");
     }
   }
 
-  /// Prepare input tensor from `pngBytes`
-  List<List<List<List<double>>>> _prepareInput(Uint8List pngBytes) {
-    // Decode the PNG image
-    final decodedImage = imgLib.decodeImage(pngBytes);
-    if (decodedImage == null) {
-      throw Exception("Unable to decode image from provided bytes.");
-    }
+  List<List<List<List<double>>>> _prepareBatchInput(List<Uint8List> pngBytesList) {
+    return pngBytesList.map((pngBytes) {
+      final decodedImage = imgLib.decodeImage(pngBytes);
+      if (decodedImage == null) throw Exception("Failed to decode image");
 
-    // Resize the image to 120x120
-    final resizedImage = imgLib.copyResize(decodedImage, width: 120, height: 120);
+      final resizedImage = imgLib.copyResize(
+        decodedImage,
+        width: IMAGE_SIZE,
+        height: IMAGE_SIZE,
+      );
 
-    // Normalize pixel values (0-255 to 0-1) and create a 3D list
-    final normalizedImage = List.generate(
-      resizedImage.height,
-          (y) => List.generate(
-        resizedImage.width,
-            (x) {
-          final pixel = resizedImage.getPixel(x, y);
-          final r = imgLib.getRed(pixel) / 255.0;
-          final g = imgLib.getGreen(pixel) / 255.0;
-          final b = imgLib.getBlue(pixel) / 255.0;
-          return [r, g, b];
-        },
-      ),
-    );
-
-    // Replicate the image three times to form a 4D tensor [3, 120, 120, 3]
-    return List.generate(3, (_) => normalizedImage);
+      return List.generate(
+        IMAGE_SIZE,
+            (y) => List.generate(
+          IMAGE_SIZE,
+              (x) {
+            final pixel = resizedImage.getPixel(x, y);
+            return [
+              imgLib.getRed(pixel) / 255.0,
+              imgLib.getGreen(pixel) / 255.0,
+              imgLib.getBlue(pixel) / 255.0,
+            ];
+          },
+        ),
+      );
+    }).toList();
   }
 
-  /// Dispose of the interpreter when done
   void dispose() {
-    try {
-      _interpreter.close();
-    } catch (e) {
-      print("Error while closing interpreter: $e");
+    if (_isInitialized && !_isDisposed && _interpreter != null) {
+      _interpreter!.close();
+      _interpreter = null;
+      _isDisposed = true;
+      _isInitialized = false;
     }
   }
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:inkombe_flutter/pages/camera_exp.dart';
 import 'package:inkombe_flutter/pages/database_page.dart';
 import 'package:inkombe_flutter/pages/home_screen/home_page.dart';
-import 'package:inkombe_flutter/pages/new_scan_page.dart';
 import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:line_icons/line_icons.dart';
 
@@ -21,10 +19,16 @@ class _HomepageState extends State<Homepage> {
   TextStyle(fontSize: 30, fontWeight: FontWeight.w600);
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
-    CameraExp(),
+    Text (
+      'Search',
+      style: optionStyle,
+    ),
     ScanPage(),
     DatabasePage(),
-    NewScanPage()
+    Text(
+      'Settings',
+      style: optionStyle,
+    ),
   ];
 
   @override

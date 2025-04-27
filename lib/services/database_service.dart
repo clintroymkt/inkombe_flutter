@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
@@ -42,7 +43,7 @@ class DatabaseService {
 
 
 //   create cattle
-  Future createCattle(
+  Future<void> createCattle(
       String age,
       String breed,
       String sex,
@@ -50,34 +51,41 @@ class DatabaseService {
       String height,
       String name,
       String weight,
-      image,
-      List faceEmbeddings,
-      List noseEmbeddings,
-      String date) async {
-    cattleCollection.add({
-      "name": name,
-      "age": age,
-      "weight(kg)": weight,
-      "height(m)": height,
-      "breed": breed,
-      "diet": '',
-      "sex": sex,
-      "diseases/ailments": diseasesAilments,
-      "location": '',
-      'image': image,
-      'faceEmbeddings':faceEmbeddings,
-      'noseEmbeddings':noseEmbeddings,
-      "ownerUid": currentUser?.uid,
-      "dateAdded": date,
-          }).then((docRef) => {
-          // userDocId = userCollection.doc().
-          //   userCollection.where(
-          //     {
-          //       "cattle":FieldValue.arrayUnion([docRef.id]) //add cattle to user document
-          //       //don't forget to remove when deleting cattle
-          //     }
-          //   )
-        });
+      String image,
+      List<List<double>> faceEmbeddings,
+      List<List<double>> noseEmbeddings,
+      String date,
+      ) async {
+    try {
+      // Convert nested lists to serializable format
+      final serializedFaceEmbeddings = faceEmbeddings.asMap().map(
+            (index, embedding) => MapEntry(index.toString(), embedding),
+      );
+
+      final serializedNoseEmbeddings = noseEmbeddings.asMap().map(
+            (index, embedding) => MapEntry(index.toString(), embedding),
+      );
+
+      await cattleCollection.add({
+        "name": name,
+        "age": age,
+        "weight(kg)": weight,
+        "height(m)": height,
+        "breed": breed,
+        "diet": '',
+        "sex": sex,
+        "diseases/ailments": diseasesAilments,
+        "location": '',
+        'image': image,
+        'faceEmbeddings': serializedFaceEmbeddings,
+        'noseEmbeddings': serializedNoseEmbeddings,
+        "ownerUid": currentUser?.uid,
+        "dateAdded": date,
+      });
+    } catch (e, stack) {
+      debugPrint('Error creating cattle: $e\n$stack');
+      rethrow;
+    }
   }
 
   getCattleUpdates() {
@@ -123,8 +131,8 @@ class DatabaseService {
       String height,
       String name,
       String weight,
-      List faceEmbeddings,
-      List noseEmbeddings) async {
+      List<List<double>> faceEmbeddings,
+      List<List<double>>  noseEmbeddings) async {
     var random = Random();
     var rand = random.nextInt(1000000000);
     // Give the image a random name

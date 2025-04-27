@@ -6,72 +6,80 @@ import 'package:image/image.dart' as imgLib;
 import 'landmark_extractor.dart';
 
 class ImageProcessor {
+  static const int REQUIRED_IMAGE_COUNT = 3;
+  static const int TARGET_IMAGE_SIZE = 120;
+  static const int FACE_EMBEDDINGS_INDEX = 1;
+  static const int NOSE_EMBEDDINGS_INDEX = 3;
+
   final LandMarkModelRunner landMarkModelRunner;
 
   ImageProcessor({required this.landMarkModelRunner});
 
-  /// Processes an image file and returns the embeddings and the PNG file.
-  ///
-  /// [imageFile]: The image file to process.
-  /// Returns a map containing face embeddings, nose embeddings, and the PNG file.
-  Future<Map<String, dynamic>> processImage(XFile imageFile) async {
+  /// Processes exactly 3 images to extract face and nose embeddings
+  /// Throws [ArgumentError] if not exactly 3 images are provided
+  /// Throws [ImageProcessingException] for any processing errors
+  Future<Map<String, dynamic>>  processThreeImages(List<XFile> imageFiles) async {
+    if (imageFiles.length != REQUIRED_IMAGE_COUNT) {
+      throw ArgumentError('Exactly $REQUIRED_IMAGE_COUNT images required, got ${imageFiles.length}');
+    }
+
     try {
-      // Step 1: Read the image bytes
-      final bytes = await imageFile.readAsBytes();
-      if (bytes.isEmpty) {
-        throw Exception("Image bytes are empty. The file might be corrupted.");
-      }
-      print("Image bytes length: ${bytes.length}");
+      // Process all images in parallel
+      final pngBytesList = await Future.wait(
+        imageFiles.map((file) => _prepareSingleImage(file)),
+      );
 
-      // Step 2: Decode the image
-      final imgLib.Image? decodedImage = imgLib.decodeImage(bytes);
-      if (decodedImage == null) {
-        throw Exception("Error decoding image. Check if the image format is supported.");
-      }
-      print("Decoded image size: ${decodedImage.width}x${decodedImage.height}");
+      // Run model and validate outputs
+      final modelOutputs = await landMarkModelRunner.run(pngBytesList);
+      _validateModelOutputs(modelOutputs);
 
-      // Step 3: Resize the image
-      final imgLib.Image resizedImage = imgLib.copyResizeCropSquare(decodedImage, 120);
-      print("Resized image size: ${resizedImage.width}x${resizedImage.height}");
-
-      // Step 4: Convert to PNG format
-      final pngBytes = Uint8List.fromList(imgLib.encodePng(resizedImage));
-      if (pngBytes.isEmpty) {
-        throw Exception("Failed to convert resized image to PNG bytes.");
-      }
-      print("PNG bytes length: ${pngBytes.length}");
-
-      // Step 5: Run the model
-      final output = await landMarkModelRunner.run(pngBytes);
-
-      if (output.isEmpty || output.any((row) => row.isEmpty)) {
-        throw Exception("Model returned empty or invalid output.");
-      }
-      print("Model output received: ${output.length} rows of ${output[0].length} columns.");
-
-      // Step 6: Extract embeddings
-      final faceEmbeddings = output[1][0]; // Face embeddings
-      final noseEmbeddings = output[3][0]; // Nose embeddings
-
-
-
-      // Step 7: Save the resized image to a temporary file
-      final tempDir = Directory.systemTemp;
-      final tempFilePath = "${tempDir.path}/resized_image.png";
-      final pngFile = File(tempFilePath);
-      await pngFile.writeAsBytes(pngBytes);
-      print("PNG file saved at: $tempFilePath");
-
-      // Return embeddings and the PNG file
       return {
-        "faceEmbeddings": faceEmbeddings,
-        "noseEmbeddings": noseEmbeddings,
-        "file": pngFile, // Return the PNG file
+        'faceEmbeddings': modelOutputs[FACE_EMBEDDINGS_INDEX],
+        'noseEmbeddings': modelOutputs[NOSE_EMBEDDINGS_INDEX],
       };
-    } catch (e, stackTrace) {
-      print("Error processing image: $e");
-      print(stackTrace);
-      rethrow; // Re-throw the exception for the caller to handle
+    } catch (e) {
+      throw ImageProcessingException('Failed to process images: ${e.toString()}');
     }
   }
+
+  /// Validates model outputs structure
+  void _validateModelOutputs(List<List<List<double>>> outputs) {
+    if (outputs.length <= NOSE_EMBEDDINGS_INDEX) {
+      throw ImageProcessingException(
+          'Invalid model outputs - expected at least ${NOSE_EMBEDDINGS_INDEX + 1} elements');
+    }
+  }
+
+  /// Prepares single image by resizing and converting to PNG
+  Future<Uint8List> _prepareSingleImage(XFile imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      if (bytes.isEmpty) throw Exception('Empty image file');
+
+      final decodedImage = imgLib.decodeImage(bytes);
+      if (decodedImage == null) throw Exception('Failed to decode image');
+
+      // Validate minimum dimensions
+      if (decodedImage.width < 30 || decodedImage.height < 30) {
+        throw Exception('Image too small (${decodedImage.width}x${decodedImage.height})');
+      }
+
+      final resizedImage = imgLib.copyResizeCropSquare(
+        decodedImage,
+        TARGET_IMAGE_SIZE,
+      );
+
+      return Uint8List.fromList(imgLib.encodePng(resizedImage));
+    } catch (e) {
+      throw ImageProcessingException(
+          'Failed to process image ${imageFile.name}: ${e.toString()}');
+    }
+  }
+}
+
+class ImageProcessingException implements Exception {
+  final String message;
+  ImageProcessingException(this.message);
+  @override
+  String toString() => 'ImageProcessingException: $message';
 }
