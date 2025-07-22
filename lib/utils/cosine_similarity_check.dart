@@ -3,136 +3,189 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
-  /// Fetch all user cattle data and check similarity against new embeddings
-  Future<List<Map<String, dynamic>>?> checkSimilarity({
+  /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
+  ///
+  /// [faceEmbeddingsList]: List of face embeddings from the scanned image (typically 3 embeddings)
+  /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (typically 3 embeddings)
+  /// Returns a list of matches sorted by combined similarity score
+  Future<List<Map<String, dynamic>>> checkSimilarity({
     required List<List<double>> faceEmbeddingsList,
     required List<List<double>> noseEmbeddingsList,
     double faceWeight = 0.6,
     double noseWeight = 0.4,
-    double highThreshold = 0.8,
+    double highThreshold = 0.85,
     double lowThreshold = 0.7,
   }) async {
     try {
-      QuerySnapshot cattleSnapshot = await DatabaseService().getAllSingleUserCattle();
-      print("Fetched ${cattleSnapshot.docs.length} cows");
-      if (cattleSnapshot.docs.isEmpty) {
-        print("No stored cattle found.");
-        return null;
-      }
+      // Validate inputs
+      _validateInputs(faceEmbeddingsList, noseEmbeddingsList);
 
-      List<double> getListFromFirestore(dynamic value) {
-        if (value == null) return []; // Handle null case
-        if (value is List) {
-          return value.map((e) => (e as num).toDouble()).toList(); // Ensure numbers
-        }
-        return []; // If not a list, return empty
-      }
+      // Fetch cattle data from Firestore
+      final snapshot = await DatabaseService().getAllSingleUserCattle();
+      if (snapshot.docs.isEmpty) return [];
 
-      List<Map<String, dynamic>> storedCows = cattleSnapshot.docs.map((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        return {
-          "id": doc.id,
-          "faceEmbeddings": getListFromFirestore(data["faceEmbeddings"]),
-          "noseEmbeddings": getListFromFirestore(data["noseEmbeddings"]),
-        };
-      }).toList();
+      // Parse and filter stored cows
+      final storedCows = _parseStoredCows(snapshot.docs);
+      if (storedCows.isEmpty) return [];
 
-      List<Map<String, dynamic>> highMatches = compareCowEmbeddings(
-        newFaceEmbeddingsList: faceEmbeddingsList,
-        newNoseEmbeddingsList: noseEmbeddingsList,
-        storedCows: storedCows,
-        faceWeight: faceWeight,
-        noseWeight: noseWeight,
-        threshold: highThreshold,
+      // Compare embeddings and get matches
+      final matches = _findMatches(
+        faceEmbeddingsList,
+        noseEmbeddingsList,
+        storedCows,
+        faceWeight,
+        noseWeight,
       );
 
-      if (highMatches.isNotEmpty) {
-        return highMatches;
-      }
-
-      List<Map<String, dynamic>> lowMatches = compareCowEmbeddings(
-        newFaceEmbeddingsList: faceEmbeddingsList,
-        newNoseEmbeddingsList: noseEmbeddingsList,
-        storedCows: storedCows,
-        faceWeight: faceWeight,
-        noseWeight: noseWeight,
-        threshold: lowThreshold,
-      );
-
-      return lowMatches;
+      // Sort and filter results
+      return _filterAndSortMatches(matches, highThreshold, lowThreshold);
+    } on FirebaseException catch (e) {
+      print('Firestore error: $e');
+      return [];
     } catch (e) {
-      print("Error fetching cattle data: $e");
-      return null;
+      print('Error in similarity check: $e');
+      rethrow;
     }
   }
 
-  /// Compute cosine similarity
-  double cosineSimilarity(List<double> embedding1, List<double> embedding2) {
-    if (embedding1.length != embedding2.length) {
-      return 1;
+  /// Validates that input embeddings are not empty and have matching lengths
+  void _validateInputs(
+      List<List<double>> faceEmbeddingsList,
+      List<List<double>> noseEmbeddingsList,
+      ) {
+    if (faceEmbeddingsList.isEmpty || noseEmbeddingsList.isEmpty) {
+      throw StateError('Input embeddings cannot be empty');
     }
-
-    double dotProduct = 0.0;
-    double magnitude1 = 0.0;
-    double magnitude2 = 0.0;
-
-    for (int i = 0; i < embedding1.length; i++) {
-      dotProduct += embedding1[i] * embedding2[i];
-      magnitude1 += embedding1[i] * embedding1[i];
-      magnitude2 += embedding2[i] * embedding2[i];
+    if (faceEmbeddingsList.length != noseEmbeddingsList.length) {
+      throw StateError('Face and nose embeddings must have same length');
     }
-
-    magnitude1 = sqrt(magnitude1);
-    magnitude2 = sqrt(magnitude2);
-
-    if (magnitude1 == 0 || magnitude2 == 0) {
-      throw ArgumentError("Embeddings cannot have zero magnitude");
-    }
-
-    return dotProduct / (magnitude1 * magnitude2);
   }
 
-  /// Compare embeddings with stored data
-  List<Map<String, dynamic>> compareCowEmbeddings({
-    required List<List<double>> newFaceEmbeddingsList,
-    required List<List<double>> newNoseEmbeddingsList,
-    required List<Map<String, dynamic>> storedCows,
-    required double faceWeight,
-    required double noseWeight,
-    required double threshold,
-  }) {
-    List<Map<String, dynamic>> matches = [];
+  /// Parses and filters stored cows from Firestore documents
+  List<Map<String, dynamic>> _parseStoredCows(List<QueryDocumentSnapshot> docs) {
+    return docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
+      final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
 
-    for (Map<String, dynamic> cow in storedCows) {
-      List<double> storedFaceEmbedding = cow["faceEmbeddings"];
-      List<double> storedNoseEmbedding = cow["noseEmbeddings"];
+      return {
+        'id': doc.id,
+        'faceEmbeddings': faceEmbs,
+        'noseEmbeddings': noseEmbs,
+        'fullData': data,
+      };
+    }).where((cow) =>
+    (cow['faceEmbeddings'] as List).isNotEmpty &&
+        (cow['noseEmbeddings'] as List).isNotEmpty
+    ).toList();
+  }
 
-      if (storedFaceEmbedding.isEmpty || storedNoseEmbedding.isEmpty) {
-        print("Skipping cow ${cow['id']} - missing embeddings");
-        continue; // Skip this cow if embeddings are missing
+  /// Parses embeddings from Firestore data (handles both List and Map formats)
+  List<List<double>> _parseEmbedding(dynamic value) {
+    try {
+      if (value == null) return [];
+
+      // Handle List format (direct list of embeddings)
+      if (value is List) {
+        if (value.isEmpty) return [];
+        // Check if it's List<List> (multiple embeddings)
+        if (value.first is List) {
+          return value.map<List<double>>((e) =>
+              (e as List).map<double>((n) => (n as num).toDouble()).toList()
+          ).toList();
+        }
+        // Single embedding case
+        return [value.map<double>((e) => (e as num).toDouble()).toList()];
       }
 
-      double faceSimilarity = 0.0;
-      double noseSimilarity = 0.0;
-
-      for (int i = 0; i < newFaceEmbeddingsList.length; i++) {
-        faceSimilarity += cosineSimilarity(newFaceEmbeddingsList[i], storedFaceEmbedding);
-        noseSimilarity += cosineSimilarity(newNoseEmbeddingsList[i], storedNoseEmbedding);
+      // Handle Map format (Firestore-style with keys)
+      if (value is Map<String, dynamic>) {
+        return value.values.map<List<double>>((e) =>
+            (e as List).map<double>((n) => (n as num).toDouble()).toList()
+        ).toList();
       }
 
-      faceSimilarity /= newFaceEmbeddingsList.length;
-      noseSimilarity /= newNoseEmbeddingsList.length;
+      return [];
+    } catch (e) {
+      print('Error parsing embedding: $e');
+      return [];
+    }
+  }
 
-      double combinedSimilarity = (faceSimilarity * faceWeight) + (noseSimilarity * noseWeight);
+  /// Finds all potential matches by comparing embeddings
+  List<Map<String, dynamic>> _findMatches(
+      List<List<double>> faceEmbs,
+      List<List<double>> noseEmbs,
+      List<Map<String, dynamic>> storedCows,
+      double faceWeight,
+      double noseWeight,
+      ) {
+    return storedCows.map((cow) {
+      final cowFaceEmbs = cow['faceEmbeddings'] as List<List<double>>;
+      final cowNoseEmbs = cow['noseEmbeddings'] as List<List<double>>;
 
-      if (combinedSimilarity >= threshold) {
-        matches.add({
-          "id": cow["id"],
-          "combinedSimilarity": combinedSimilarity,
-        });
+      // Find best match scores
+      final faceScore = _findBestMatchScore(faceEmbs, cowFaceEmbs);
+      final noseScore = _findBestMatchScore(noseEmbs, cowNoseEmbs);
+
+      return {
+        'id': cow['id'],
+        'combinedSimilarity': (faceScore * faceWeight) + (noseScore * noseWeight),
+        'faceSimilarity': faceScore,
+        'noseSimilarity': noseScore,
+        'data': cow['fullData'],
+      };
+    }).toList();
+  }
+
+  /// Finds the highest similarity score between all combinations of embeddings
+  double _findBestMatchScore(
+      List<List<double>> sourceEmbs,
+      List<List<double>> targetEmbs,
+      ) {
+    double bestScore = 0.0;
+    for (final source in sourceEmbs) {
+      for (final target in targetEmbs) {
+        final score = _cosineSimilarity(source, target);
+        if (score > bestScore) {
+          bestScore = score;
+          // Early exit if we find a perfect match
+          if (bestScore >= 0.99) return bestScore;
+        }
       }
     }
+    return bestScore;
+  }
 
-    return matches;
+  /// Computes cosine similarity between two vectors
+  double _cosineSimilarity(List<double> a, List<double> b) {
+    assert(a.isNotEmpty && b.isNotEmpty, 'Vectors cannot be empty');
+    assert(a.length == b.length, 'Vectors must have equal length');
+
+    double dot = 0.0, magA = 0.0, magB = 0.0;
+    for (int i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      magA += a[i] * a[i];
+      magB += b[i] * b[i];
+    }
+    return magA == 0 || magB == 0 ? 0.0 : dot / (sqrt(magA) * sqrt(magB));
+  }
+
+  /// Filters and sorts matches based on thresholds
+  List<Map<String, dynamic>> _filterAndSortMatches(
+      List<Map<String, dynamic>> matches,
+      double highThreshold,
+      double lowThreshold,
+      ) {
+    matches.sort((a, b) =>
+        (b['combinedSimilarity'] as double).compareTo(a['combinedSimilarity'] as double));
+
+    final highMatches = matches.where((m) =>
+    (m['combinedSimilarity'] as double) >= highThreshold).toList();
+
+    return highMatches.isNotEmpty
+        ? highMatches
+        : matches.where((m) =>
+    (m['combinedSimilarity'] as double) >= lowThreshold).toList();
   }
 }
