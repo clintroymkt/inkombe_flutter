@@ -33,7 +33,13 @@ class _LoginPageState extends State<LoginPage>{
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 25,),
+                Image.asset(
+                    'assets/IDmyCow.png',
+                  height: 300,
+                  width: 300,
+
+                ),
+
                 const Text(
                   'Hello!',
                   style: TextStyle(
@@ -136,7 +142,7 @@ class _LoginPageState extends State<LoginPage>{
                     ],
                   ),
                 ),
-                const SizedBox(height:10),
+                const SizedBox(height:40),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

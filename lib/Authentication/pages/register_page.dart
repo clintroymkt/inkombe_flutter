@@ -35,7 +35,12 @@ class _RegisterPageState extends State<RegisterPage>{
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 25,),
+                    Image.asset(
+                      'assets/IDmyCow.png',
+                      height: 300,
+                      width: 300,
+
+                    ),
                     const Text(
                       'Hello!',
                       style: TextStyle(
@@ -113,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage>{
                               ),
                             ),
                           ),
-                          const SizedBox(height:10),
+                          const SizedBox(height:20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -129,7 +134,7 @@ class _RegisterPageState extends State<RegisterPage>{
                               )
                             ],
                           ),
-                          const SizedBox(height:10),
+                          const SizedBox(height:20),
 
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -145,7 +150,7 @@ class _RegisterPageState extends State<RegisterPage>{
                                 ),
 
                                 child: const Center(
-                                  child: Text('Sign Uo', style: TextStyle(color:Colors.white),
+                                  child: Text('Sign Up', style: TextStyle(color:Colors.white),
                                   ),
                                 ),
                               ),
@@ -154,7 +159,7 @@ class _RegisterPageState extends State<RegisterPage>{
                         ],
                       ),
                     ),
-                    const SizedBox(height:10),
+                    const SizedBox(height:30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
