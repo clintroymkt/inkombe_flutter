@@ -41,8 +41,8 @@ class ImageProcessorID {
       }
       print("PNG bytes length: ${pngBytes.length}");
 
-      // Step 5: Run the model
-      final output = await landMarkModelRunner.run(pngBytes as List<Uint8List>);
+      // Step 5: Run the model - FIXED HERE
+      final output = await landMarkModelRunner.run([pngBytes]);
 
       if (output.isEmpty || output.any((row) => row.isEmpty)) {
         throw Exception("Model returned empty or invalid output.");
@@ -52,8 +52,6 @@ class ImageProcessorID {
       // Step 6: Extract embeddings
       final faceEmbeddings = output[1][0]; // Face embeddings
       final noseEmbeddings = output[3][0]; // Nose embeddings
-
-
 
       // Step 7: Save the resized image to a temporary file
       final tempDir = Directory.systemTemp;
