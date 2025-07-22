@@ -41,8 +41,7 @@ class _ScanPageState extends State<ScanPage> {
     super.initState();
     landMarkModelRunner = LandMarkModelRunner();
     imageProcessor = ImageProcessor(landMarkModelRunner: landMarkModelRunner);
-    imageProcessorID =
-        ImageProcessorID(landMarkModelRunner: landMarkModelRunner);
+    imageProcessorID = ImageProcessorID(landMarkModelRunner: landMarkModelRunner);
     initCamera();
   }
 
@@ -110,11 +109,8 @@ class _ScanPageState extends State<ScanPage> {
 
     try {
       final output = await imageProcessor.processThreeImages(capturedImages);
-
-
-      // Convert XFiles to Files for the next screen
       pngFilesList = await Future.wait(capturedImages.map(
-        (xfile) async => File(xfile.path),
+            (xfile) async => File(xfile.path),
       ));
 
       setState(() {
@@ -123,11 +119,8 @@ class _ScanPageState extends State<ScanPage> {
         result = "Processing complete!";
       });
 
-      print(faceEmbeddingsList);
-      print(noseEmbeddingsList);
-
       if (faceEmbeddingsList.isNotEmpty && noseEmbeddingsList.isNotEmpty) {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => CreateCowPageCopy(
@@ -141,7 +134,7 @@ class _ScanPageState extends State<ScanPage> {
       }
     } catch (e) {
       setState(() => result = "Processing error: ${e.toString()}");
-      print(e.toString());
+      debugPrint(e.toString());
     } finally {
       setState(() => isProcessing = false);
     }
@@ -157,22 +150,23 @@ class _ScanPageState extends State<ScanPage> {
 
     try {
       final output = await imageProcessorID.processImage(capturedImages.first);
-      final match = await similarityChecker.checkSimilarity(
+      final matches = await similarityChecker.checkSimilarity(
         faceEmbeddingsList: [output["faceEmbeddings"]],
         noseEmbeddingsList: [output["noseEmbeddings"]],
       );
 
-      if (match != null && match.isNotEmpty) {
-        Navigator.push(
+      if (matches.isNotEmpty) {
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CowProfilePage(docId: match[0]["id"]),
+            builder: (context) => CowProfilePage(docId: matches.first["id"]),
           ),
         );
       } else {
         showSnackBar(context, Colors.redAccent, "No match found");
       }
     } catch (e) {
+      debugPrint("Identification error: $e");
       showSnackBar(context, Colors.redAccent, "Identification failed");
     } finally {
       setState(() {
@@ -196,7 +190,6 @@ class _ScanPageState extends State<ScanPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Full-screen camera preview with proper aspect ratio
           if (cameraController != null && cameraController!.value.isInitialized)
             Positioned.fill(
               child: AspectRatio(
@@ -213,14 +206,12 @@ class _ScanPageState extends State<ScanPage> {
               width: MediaQuery.of(context).size.width * 0.8,
               height: MediaQuery.of(context).size.width * 0.8,
               decoration: BoxDecoration(
-                border:
-                    Border.all(color: Colors.red.withOpacity(0.8), width: 2),
+                border: Border.all(color: Colors.red.withOpacity(0.8), width: 2),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
 
-          // Thumbnail previews
           if (capturedImages.isNotEmpty)
             Positioned(
               bottom: 120,
@@ -247,7 +238,6 @@ class _ScanPageState extends State<ScanPage> {
               ),
             ),
 
-          // Top app bar
           Positioned(
             top: MediaQuery.of(context).padding.top,
             left: 0,
@@ -261,72 +251,65 @@ class _ScanPageState extends State<ScanPage> {
                 IconButton(
                   icon: const Icon(Icons.cameraswitch),
                   onPressed: () {
-                    // Handle camera switch manually since switchCamera isn't available
-                    // You'll need to implement camera switching logic
+                    // Implement camera switching if needed
                   },
                 ),
               ],
             ),
           ),
 
-          // Bottom controls
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  // Capture button with counter
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: imagesCaptured < 3 ? captureImage : null,
-                      icon: const Icon(Icons.camera_alt),
-                      label: Text(status),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: imagesCaptured < 3 ? captureImage : null,
+                        icon: const Icon(Icons.camera_alt),
+                        label: Text(status),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Action buttons row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Identify button
-                      if (capturedImages.isNotEmpty)
-                        FloatingActionButton(
-                          onPressed: identifyCow,
-                          child: const Icon(Icons.search),
-                          backgroundColor: Colors.green,
-                        ),
-
-                      // Reset button
-                      if (capturedImages.isNotEmpty)
-                        FloatingActionButton(
-                          onPressed: resetCaptureState,
-                          child: const Icon(Icons.refresh),
-                          backgroundColor: Colors.red,
-                        ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (capturedImages.isNotEmpty)
+                          FloatingActionButton(
+                            heroTag: 'searchButton', // Unique hero tag
+                            onPressed: identifyCow,
+                            backgroundColor: Colors.green,
+                            child: const Icon(Icons.search),
+                          ),
+                        if (capturedImages.isNotEmpty)
+                          FloatingActionButton(
+                            heroTag: 'resetButton', // Unique hero tag
+                            onPressed: resetCaptureState,
+                            backgroundColor: Colors.red,
+                            child: const Icon(Icons.refresh),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
           ),
 
-          // Processing indicator
-          if (isProcessing) const Center(child: CircularProgressIndicator()),
+              if (isProcessing) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
