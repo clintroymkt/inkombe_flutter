@@ -74,7 +74,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
             children: [
               Expanded(
                 child: Container(
-                  color: Color(0xFFFFFFFF),
+                  color: Color(0xFF064151),
                   padding: EdgeInsets.only(top: 41),
                   width: double.infinity,
                   height: double.infinity,
@@ -268,7 +268,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                         child: Container(
                                           padding: const EdgeInsets.all(20),
                                           decoration: BoxDecoration(
-                                            color: Color(0xFFd98f48),
+                                            color: Color(0xFF064151),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: const Center(

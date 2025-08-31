@@ -60,6 +60,12 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                Image.asset(
+                                  'assets/IDmyCow.png',
+                                  height: 60,
+                                  width: 60,
+
+                                ),
                                 const Text(
                                   'Welcome User',
                                   style: TextStyle(
@@ -67,12 +73,16 @@ class _HomePageState extends State<HomePage> {
                                     fontSize: 20,
                                   ),
                                 ),
-                                Container(
-                                  width: 15,
-                                  height: 19,
-                                  child: Image.asset(
-                                    'assets/icons/bell.png',
-                                    fit: BoxFit.fill,
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0,0,10,0),
+                                  child: SizedBox(
+                                    width: 15,
+                                    height: 19,
+
+                                    child: Image.asset(
+                                      'assets/icons/bell.png',
+                                      fit: BoxFit.fill,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -133,7 +143,7 @@ class _HomePageState extends State<HomePage> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(100),
-            color: _selectedIndex == index ? const Color(0xFFD98E47) : Colors.transparent,
+            color: _selectedIndex == index ? const Color(0xFF064151) : Colors.transparent,
           ),
           padding: const EdgeInsets.symmetric(vertical: 15),
           width: 100,

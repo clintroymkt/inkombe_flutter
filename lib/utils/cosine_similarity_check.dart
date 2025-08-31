@@ -21,7 +21,8 @@ class CosineSimilarityCheck {
       _validateInputs(faceEmbeddingsList, noseEmbeddingsList);
 
       // Fetch cattle data from Firestore
-      final snapshot = await DatabaseService().getAllSingleUserCattle();
+      // final snapshot = await DatabaseService().getAllSingleUserCattle(); Original
+      final snapshot = await DatabaseService().getAllCattle();
       if (snapshot.docs.isEmpty) return [];
 
       // Parse and filter stored cows

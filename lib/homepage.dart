@@ -53,7 +53,7 @@ Widget build(BuildContext context) {
           rippleColor: Colors.grey[300]!,
           hoverColor: Colors.grey[100]!,
           gap: 0,
-          activeColor: Color(0xFFD98F48),
+          activeColor: Color(0xFF064151),
           iconSize: 30,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           duration: const Duration(milliseconds: 400),

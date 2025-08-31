@@ -279,7 +279,7 @@ class _ScanPageState extends State<ScanPage> {
                         label: Text(status),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.blue,
+                          backgroundColor: const Color(0xFF064151),
                           foregroundColor: Colors.white,
                         ),
                       ),
