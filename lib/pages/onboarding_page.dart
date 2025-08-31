@@ -130,7 +130,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       child: GestureDetector(
                           onTap: () {
                             _currentPage == _pages.length - 1
-                                ? _markOnboardingComplete // On last page, complete onboarding
+                                ? _markOnboardingComplete() // On last page, complete onboarding
                                 : () {
                                     _cancelTimer();
                                     _pageController.nextPage(
