@@ -3,7 +3,7 @@
         namespace "com.example.inkombe_flutter"
     }
     <application
-        android:label="inkombe_flutter"
+        android:label="IDmyCow"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
