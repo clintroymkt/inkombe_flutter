@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:inkombe_flutter/homepage.dart';
 
 import '../../widgets.dart';
+import '../../widgets/CustomButton.dart';
 import '../firebase_auth.dart';
 
 class LoginPage extends StatefulWidget{
@@ -119,26 +120,34 @@ class _LoginPageState extends State<LoginPage>{
                 ),
                 const SizedBox(height:10),
             
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                 child: GestureDetector(
-                   onTap: ()  {
-                   login();
-                   },
-                   child: Container(
-                     padding: const EdgeInsets.all(20),
-                     decoration: BoxDecoration(
-                         color: Color(0xFF064151),
-                         borderRadius: BorderRadius.circular(12)
-                     ),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                //  child: GestureDetector(
+                //    onTap: ()  {
+                //    login();
+                //    },
+                //    child: Container(
+                //      padding: const EdgeInsets.all(20),
+                //      decoration: BoxDecoration(
+                //          color: Color(0xFF064151),
+                //          borderRadius: BorderRadius.circular(12)
+                //      ),
+                //
+                //      child: const Center(
+                //        child: Text('Sign In', style: TextStyle(color:Colors.white),
+                //        ),
+                //      ),
+                //    ),
+                //  ),
+                // ),
+                      CustomButton(
+                        icon: Icons.exit_to_app,
+                        text: 'Sign in',
+                        onPressed: (){
+                          login();
+                        }
 
-                     child: const Center(
-                       child: Text('Sign In', style: TextStyle(color:Colors.white),
-                       ),
-                     ),
-                   ),
-                 ),
-                ),
+                      )
                     ],
                   ),
                 ),
