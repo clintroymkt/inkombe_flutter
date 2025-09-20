@@ -12,7 +12,7 @@ import '../../services/database_service.dart';
 class RegisterPage extends StatefulWidget{
   final VoidCallback showLoginPage;
   const RegisterPage({super.key,
-  required this.showLoginPage(),
+    required this.showLoginPage(),
   });
 
   @override
