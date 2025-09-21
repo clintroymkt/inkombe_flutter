@@ -7,17 +7,18 @@ import '../../widgets.dart';
 import '../../widgets/CustomButton.dart';
 import '../firebase_auth.dart';
 
-class LoginPage extends StatefulWidget{
+class LoginPage extends StatefulWidget {
   final VoidCallback showRegisterPage;
-  const LoginPage({Key? key,
-  required this.showRegisterPage,
-  }) : super(key:key);
+  const LoginPage({
+    Key? key,
+    required this.showRegisterPage,
+  }) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>{
+class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   final formKey = GlobalKey<FormState>();
   // email controller
@@ -25,22 +26,20 @@ class _LoginPageState extends State<LoginPage>{
   final _passwordController = TextEditingController();
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
-      body:  SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        backgroundColor: Colors.grey[300],
+        body: SafeArea(
+          child: Center(
+              child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                    'assets/IDmyCow.png',
+                  'assets/IDmyCow.png',
                   height: 300,
                   width: 300,
-
                 ),
-
                 const Text(
                   'Hello!',
                   style: TextStyle(
@@ -48,7 +47,9 @@ class _LoginPageState extends State<LoginPage>{
                     fontSize: 24,
                   ),
                 ),
-                const SizedBox(height: 10,),
+                const SizedBox(
+                  height: 10,
+                ),
                 const Text(
                   'Welcome Farmer',
                   style: TextStyle(
@@ -56,31 +57,27 @@ class _LoginPageState extends State<LoginPage>{
                     fontSize: 24,
                   ),
                 ),
-
                 Form(
                   key: formKey,
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal:20.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color:Colors.grey[200],
-                            border:Border.all(color:Colors.white),
-                            borderRadius: BorderRadius.circular(12)
-                          ),
-                          child:  Padding(
-                            padding: EdgeInsets.only(left:10.0),
+                              color: Colors.grey[200],
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 10.0),
                             child: TextFormField(
                               controller: _emailController,
                               decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Email'
-                              ),
+                                  border: InputBorder.none, hintText: 'Email'),
                               validator: (_emailController) {
                                 return RegExp(
-                                    "([!#-'*+/-9=?A-Z^-~-]+(.[!#-'*+/-9=?A-Z^-~-]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([!#-'*+/-9=?A-Z^-~-]+(.[!#-'*+/-9=?A-Z^-~-]+)*|[[\t -Z^-~]*])")
-                                    .hasMatch(_emailController!)
+                                            "([!#-'*+/-9=?A-Z^-~-]+(.[!#-'*+/-9=?A-Z^-~-]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([!#-'*+/-9=?A-Z^-~-]+(.[!#-'*+/-9=?A-Z^-~-]+)*|[[\t -Z^-~]*])")
+                                        .hasMatch(_emailController!)
                                     ? null
                                     : "Please Enter a valid Email";
                               },
@@ -88,79 +85,55 @@ class _LoginPageState extends State<LoginPage>{
                           ),
                         ),
                       ),
-
-                const SizedBox(height: 10,),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal:20.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        color:Colors.grey[200],
-                        border:Border.all(color:Colors.white),
-                        borderRadius: BorderRadius.circular(12)
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(left:10.0),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                          decoration:const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Password'
-                          ),
-                          validator: (_passwordController) {
-                            if (_passwordController!.length < 6) {
-                              return "Password must be at least 6 characters long";
-                            } else {
-                              return null;
-                            }
-                          }
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height:10),
-            
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                //  child: GestureDetector(
-                //    onTap: ()  {
-                //    login();
-                //    },
-                //    child: Container(
-                //      padding: const EdgeInsets.all(20),
-                //      decoration: BoxDecoration(
-                //          color: Color(0xFF064151),
-                //          borderRadius: BorderRadius.circular(12)
-                //      ),
-                //
-                //      child: const Center(
-                //        child: Text('Sign In', style: TextStyle(color:Colors.white),
-                //        ),
-                //      ),
-                //    ),
-                //  ),
-                // ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 10.0),
+                            child: TextFormField(
+                                controller: _passwordController,
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Password'),
+                                validator: (_passwordController) {
+                                  if (_passwordController!.length < 6) {
+                                    return "Password must be at least 6 characters long";
+                                  } else {
+                                    return null;
+                                  }
+                                }),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       CustomButton(
-                        icon: Icons.exit_to_app,
-                        text: 'Sign in',
-                        onPressed: (){
-                          login();
-                        }
-
-                      )
+                          icon: Icons.exit_to_app,
+                          text: 'Sign in',
+                          onPressed: () {
+                            login();
+                          })
                     ],
                   ),
                 ),
-                const SizedBox(height:40),
+                const SizedBox(height: 40),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text("Not a member?"),
                     GestureDetector(
                       onTap: widget.showRegisterPage,
-                      child: const Text(' Register now',
+                      child: const Text(
+                        ' Register now',
                         style: TextStyle(
-                          color:Colors.blue,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -169,24 +142,24 @@ class _LoginPageState extends State<LoginPage>{
                 )
               ],
             ),
-          )
-        ),
-      )
-    );
+          )),
+        ));
   }
-  login() async{
-    if (formKey.currentState!.validate()){
+
+  login() async {
+    if (formKey.currentState!.validate()) {
       // create loader state here
-      await _authService.loginWithEmailAndPassword(_emailController.text.trim(),_passwordController.text.trim()).then(
-          (value) async {
-            if (value == true){
-              nextScreen(context, const Homepage());
-            } else{
-              showSnackBar(context, Colors.redAccent, value);
-            }
-          //   revoke loader state here
-          }
-      );
+      await _authService
+          .loginWithEmailAndPassword(
+              _emailController.text.trim(), _passwordController.text.trim())
+          .then((value) async {
+        if (value == true) {
+          nextScreen(context, const Homepage());
+        } else {
+          showSnackBar(context, Colors.redAccent, value);
+        }
+        //   revoke loader state here
+      });
     }
   }
 }

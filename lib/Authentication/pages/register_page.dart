@@ -4,6 +4,7 @@ import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:inkombe_flutter/homepage.dart';
 
 import '../../widgets.dart';
+import '../../widgets/CustomButton.dart';
 import '../firebase_auth.dart';
 import '../../services/database_service.dart';
 
@@ -11,7 +12,7 @@ import '../../services/database_service.dart';
 class RegisterPage extends StatefulWidget{
   final VoidCallback showLoginPage;
   const RegisterPage({super.key,
-  required this.showLoginPage(),
+    required this.showLoginPage(),
   });
 
   @override
@@ -24,6 +25,8 @@ class _RegisterPageState extends State<RegisterPage>{
   // email controller
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final _confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context){
@@ -118,6 +121,37 @@ class _RegisterPageState extends State<RegisterPage>{
                               ),
                             ),
                           ),
+                          const SizedBox(height: 10,),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal:20.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color:Colors.grey[200],
+                                  border:Border.all(color:Colors.white),
+                                  borderRadius: BorderRadius.circular(12)
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.only(left:10.0),
+                                child: TextFormField(
+                                    controller: _confirmPasswordController,
+                                    obscureText: true,
+                                    decoration:const InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: 'Confirm Password'
+                                    ),
+                                    validator: (_confirmPasswordController) {
+                                      if (_confirmPasswordController!.length < 6 ) {
+                                        return "Password must be at least 6 characters long";
+                                      } else if (_confirmPasswordController != _passwordController.text){
+                                        return "Passwords do not match";
+                                      }else {
+                                        return null;
+                                      }
+                                    }
+                                ),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height:20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -136,26 +170,16 @@ class _RegisterPageState extends State<RegisterPage>{
                           ),
                           const SizedBox(height:20),
 
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                            child: GestureDetector(
-                              onTap: ()  {
+                          CustomButton(
+                              icon: Icons.how_to_reg_outlined,
+                              text: 'Sign up',
+                              onPressed: (){
                                 signUp();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                    color: Color(0xFF064151),
-                                    borderRadius: BorderRadius.circular(12)
-                                ),
+                              }
 
-                                child: const Center(
-                                  child: Text('Sign Up', style: TextStyle(color:Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          )
+
+
                         ],
                       ),
                     ),
