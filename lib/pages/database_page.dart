@@ -22,7 +22,7 @@ class _DatabasePageState extends State<DatabasePage> {
 
 
   preloadUpdates(){
-    updates = DatabaseService().getCattleUpdates();
+    updates = DatabaseService().getCattleUpdates2();
     print(currentUser?.uid);
   }
 

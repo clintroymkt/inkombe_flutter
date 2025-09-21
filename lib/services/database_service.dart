@@ -95,6 +95,12 @@ class DatabaseService {
         .limit(3)
         .snapshots();
   }
+  getCattleUpdates2() {
+    return cattleCollection
+        .where('ownerUid', isEqualTo: currentUser?.uid)
+        .orderBy("dateAdded", descending: true)
+        .snapshots();
+  }
   getAllCattle(){
     return cattleCollection
         .orderBy("date", descending:true)
