@@ -35,7 +35,7 @@ class _ListCardState extends State<ListCard> {
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: const Color(0xFFF59E0B),
+              color: const Color(0x333E9249),
               width: 2,
             ),
             borderRadius: BorderRadius.circular(4),
@@ -144,7 +144,7 @@ class _ListCardState extends State<ListCard> {
                                         child: Text(
                                           widget.date != '' ? widget.date: 'NA',
                                           style: const TextStyle(
-                                            color: Color(0xFFF59E0B),
+                                            color: Color(0x333E9249),
                                             fontSize: 12,
                                           ),
                                         ),

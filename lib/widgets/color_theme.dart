@@ -18,7 +18,7 @@ class ColourTheme {
 
   // Warning style
   static (Color, Color) warning() {
-    return (Colors.orange[700]!, Colors.white);
+    return (Colors.greenAccent[700]!, Colors.white);
   }
 
   // Success style

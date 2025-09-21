@@ -71,7 +71,7 @@ class _CowProfilePageState extends State<CowProfilePage> {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          color: Colors.white,
+                          color: Color(0xFF064151),
                         ),
                         padding: const EdgeInsets.all(5),
                         margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -130,7 +130,7 @@ class _CowProfilePageState extends State<CowProfilePage> {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(22),
-                      color: const Color(0x4DD98F48),
+                      color: const Color(0x333E9249),
 
                     ),
                     padding: const EdgeInsets.all(16),
@@ -176,7 +176,7 @@ class _CowProfilePageState extends State<CowProfilePage> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(100),
-        color: isActive ? const Color(0xFFD98E47) : Colors.white,
+        color: isActive ? const Color(0x333E9249) : Colors.white,
       ),
       padding: const EdgeInsets.symmetric(vertical: 14),
       width: 100,
