@@ -25,6 +25,10 @@ class _ScanPageState extends State<ScanPage> {
   late ImageProcessorID imageProcessorID;
   CosineSimilarityCheck similarityChecker = CosineSimilarityCheck();
 
+  bool online = false;
+
+  List<bool> isSelected = [true, false];
+
   // Image capture state
   int imagesCaptured = 0;
   List<XFile> capturedImages = [];
@@ -41,7 +45,8 @@ class _ScanPageState extends State<ScanPage> {
     super.initState();
     landMarkModelRunner = LandMarkModelRunner();
     imageProcessor = ImageProcessor(landMarkModelRunner: landMarkModelRunner);
-    imageProcessorID = ImageProcessorID(landMarkModelRunner: landMarkModelRunner);
+    imageProcessorID =
+        ImageProcessorID(landMarkModelRunner: landMarkModelRunner);
     initCamera();
   }
 
@@ -88,7 +93,7 @@ class _ScanPageState extends State<ScanPage> {
 
       setState(() {
         status = 'Capture Cow ($imagesCaptured/3)';
-        result = "Captured $imagesCaptured/3 images";
+        result = "$imagesCaptured/3 images";
       });
 
       if (imagesCaptured == 3) {
@@ -110,7 +115,7 @@ class _ScanPageState extends State<ScanPage> {
     try {
       final output = await imageProcessor.processThreeImages(capturedImages);
       pngFilesList = await Future.wait(capturedImages.map(
-            (xfile) async => File(xfile.path),
+        (xfile) async => File(xfile.path),
       ));
 
       setState(() {
@@ -206,7 +211,8 @@ class _ScanPageState extends State<ScanPage> {
               width: MediaQuery.of(context).size.width * 0.8,
               height: MediaQuery.of(context).size.width * 0.8,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.red.withOpacity(0.8), width: 2),
+                border:
+                    Border.all(color: Colors.red.withOpacity(0.8), width: 2),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -241,75 +247,111 @@ class _ScanPageState extends State<ScanPage> {
           Positioned(
             top: MediaQuery.of(context).padding.top,
             left: 0,
-            right: 0,
+            right: 10,
             child: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: Text(result),
+              title: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF064151),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  result,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
               centerTitle: true,
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.cameraswitch),
-                  onPressed: () {
-                    // Implement camera switching if needed
-                  },
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF064151),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10, left: 10),
+                    child: Row(children: [
+                      const Text(
+                        'Online',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Switch(
+                        inactiveThumbColor: Colors.white,
+                          activeColor: Colors.white,
+                          inactiveTrackColor: Colors.red,
+                          activeTrackColor: Colors.green,
+                          value: online,
+                          onChanged: (value) {
+                            setState(() {
+                              online = value;
+                              print(online);
+                            });
+                          })
+                    ]),
+                  ),
                 ),
               ],
             ),
           ),
 
           Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: imagesCaptured < 3 ? captureImage : null,
-                        icon: const Icon(Icons.camera_alt),
-                        label: Text(status),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: const Color(0xFF064151),
-                          foregroundColor: Colors.white,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (capturedImages.isNotEmpty)
+                        FloatingActionButton(
+                          heroTag: 'searchButton', // Unique hero tag
+                          onPressed: identifyCow,
+                          backgroundColor: Colors.green,
+                          child: const Icon(Icons.search),
                         ),
+                      if (capturedImages.isNotEmpty)
+                        FloatingActionButton(
+                          heroTag: 'resetButton', // Unique hero tag
+                          onPressed: resetCaptureState,
+                          backgroundColor: Colors.red,
+                          child: const Icon(Icons.refresh),
+                        ),
+                    ],
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: imagesCaptured < 3 ? captureImage : null,
+                      icon: const Icon(Icons.camera_alt),
+                      label: Text(status),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: const Color(0xFF064151),
+                        foregroundColor: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        if (capturedImages.isNotEmpty)
-                          FloatingActionButton(
-                            heroTag: 'searchButton', // Unique hero tag
-                            onPressed: identifyCow,
-                            backgroundColor: Colors.green,
-                            child: const Icon(Icons.search),
-                          ),
-                        if (capturedImages.isNotEmpty)
-                          FloatingActionButton(
-                            heroTag: 'resetButton', // Unique hero tag
-                            onPressed: resetCaptureState,
-                            backgroundColor: Colors.red,
-                            child: const Icon(Icons.refresh),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
+            ),
           ),
 
-              if (isProcessing) const Center(child: CircularProgressIndicator()),
+          if (isProcessing) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
