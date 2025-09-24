@@ -6,6 +6,9 @@ import 'package:inkombe_flutter/pages/scan_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:inkombe_flutter/Authentication/pages/main_page.dart';
 import 'package:inkombe_flutter/pages/splash_screen.dart';
+import 'package:inkombe_flutter/services/cattle_repository.dart';
+import 'package:inkombe_flutter/services/cattle_sync_service.dart';
+import 'package:inkombe_flutter/services/network_service.dart';
 import 'firebase_options.dart';
 
 List<CameraDescription>? cameras;
@@ -15,6 +18,17 @@ Future<void> main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await CattleRepository.init();
+
+  // Start listening to network changes for automatic sync
+  NetworkService.onNetworkStatusChange.listen((isOnline) {
+    if (isOnline) {
+      print('Device came online - triggering sync');
+      CattleSyncService.processSyncQueue();
+    } else {
+      print('Device went offline - working locally');
+    }
+  });
 
   runApp(const MyApp());
 }
