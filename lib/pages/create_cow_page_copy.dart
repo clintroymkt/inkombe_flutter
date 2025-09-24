@@ -8,7 +8,9 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:inkombe_flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/cattle_repository.dart';
 import '../services/database_service.dart';
+import '../services/network_service.dart';
 import '../widgets/list_card.dart';
 
 class CreateCowPageCopy extends StatefulWidget {
@@ -39,6 +41,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
   final _breedController = TextEditingController();
   final _sexController = TextEditingController();
   final _diseasesController = TextEditingController();
+
+  final CattleRepository _cattleRepo = CattleRepository();
 
   @override
   void initState() {
@@ -300,27 +304,86 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
 
   createCow() async {
     if (formKey.currentState!.validate()) {
-      await DatabaseService().uploadImage(
-        _images?[0],
-        _ageController.text.trim(),
-        _breedController.text.trim(),
-        _sexController.text.trim(),
-        _diseasesController.text.trim(),
-        _heightController.text.trim(),
-        _nameController.text.trim(),
-        _weightController.text.trim(),
-        faceEmbeddingsList!,
-        noseEmbeddingsList!,
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
       );
-      showSnackBar(context, Colors.greenAccent, "Cow created successfully");
-      _ageController.clear();
-      _breedController.clear();
-      _diseasesController.clear();
-      _heightController.clear();
-      _nameController.clear();
-      _weightController.clear();
-    }
+
+      try{
+        await _cattleRepo.createCattle(
+          // _images?[0],
+          // _ageController.text.trim(),
+          // _breedController.text.trim(),
+          // _sexController.text.trim(),
+          // _diseasesController.text.trim(),
+          // _heightController.text.trim(),
+          // _nameController.text.trim(),
+          // _weightController.text.trim(),
+          // faceEmbeddingsList!,
+          // noseEmbeddingsList!,
+          // _ageController.text.trim(),
+
+          age: _ageController.text,
+          breed: _breedController.text,
+          sex: 'Female', // Get from your form
+          diseasesAilments: 'None', // Get from your form
+          height: '1.4', // Get from your form
+          name: _nameController.text,
+          weight: '450', // Get from your form
+          imagePath: _images![0].path,
+          faceEmbeddings: faceEmbeddingsList!,
+          noseEmbeddings: noseEmbeddingsList!,
+          date: DateTime.now().toString(),
+        );
+        Navigator.pop(context);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cattle saved successfully!')),
+        );
+
+        // Check sync status
+        final isOnline = await NetworkService.isOnline();
+        if (!isOnline) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Saved locally - will sync when online'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+
+      }catch (e){
+        Navigator.pop(context); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving cattle: $e')),
+        );
+      }
+    //   Old implementation
+    //   await DatabaseService().uploadImage(
+    //     _images?[0],
+    //     _ageController.text.trim(),
+    //     _breedController.text.trim(),
+    //     _sexController.text.trim(),
+    //     _diseasesController.text.trim(),
+    //     _heightController.text.trim(),
+    //     _nameController.text.trim(),
+    //     _weightController.text.trim(),
+    //     faceEmbeddingsList!,
+    //     noseEmbeddingsList!,
+    //   );
+    //   showSnackBar(context, Colors.greenAccent, "Cow created successfully");
+    //   _ageController.clear();
+    //   _breedController.clear();
+    //   _diseasesController.clear();
+    //   _heightController.clear();
+    //   _nameController.clear();
+    //   _weightController.clear();
+     }
   }
+
 
   getImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
