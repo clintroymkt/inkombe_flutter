@@ -1,13 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
-
 import '../services/cattle_record.dart';
-import '../services/cattle_repository.dart';
-import '../services/database_service.dart';
 import '../widgets/list_card.dart';
 
 class DatabasePage extends StatefulWidget {
@@ -19,12 +14,12 @@ class DatabasePage extends StatefulWidget {
 
 class _DatabasePageState extends State<DatabasePage> {
   Future<List<CattleRecord>>? cattleFuture;
-  Stream<QuerySnapshot>? updates;
+  // Stream<QuerySnapshot>? updates;
   User? currentUser = FirebaseAuth.instance.currentUser;
   final CattleSyncService _cattleSync = CattleSyncService();
 
   void preloadUpdates() {
-    updates = DatabaseService().getCattleUpdates2();
+    // updates = DatabaseService().getCattleUpdates2();
     cattleFuture = CattleSyncService.getAllCattle();
     print(currentUser?.uid);
   }

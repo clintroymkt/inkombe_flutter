@@ -193,6 +193,7 @@ class _ListCardState extends State<ListCard> {
     return _buildNetworkImageOrPlaceholder();
   }
 
+
   Widget _buildNetworkImageOrPlaceholder() {
     if (widget.imageUri != null && widget.imageUri!.isNotEmpty) {
       return Image.network(
