@@ -190,8 +190,8 @@ class _DatabasePageState extends State<DatabasePage> {
                                           ListCard(
                                             title: doc.name,
                                             date: doc.date,
-                                            imagePath: doc.imagePath!,
-                                            imageUri: doc.imageUrl,
+e                                            imagePath: doc.localImagePaths![0],
+                                            imageUri: doc.imageUrls?[0],
                                             docId: doc.id!,
                                           ),
 
