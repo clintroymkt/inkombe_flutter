@@ -22,8 +22,8 @@ class _CowProfilePageState extends State<CowProfilePage> {
 
   Widget _buildCowImage(CattleRecord data) {
     // Priority 1: Use local image file if available
-    if (data.imagePath != null && data.imagePath!.isNotEmpty) {
-      final file = File(data.imagePath!);
+    if (data.localImagePaths != null && data.localImagePaths!.isNotEmpty) {
+      final file = File(data.localImagePaths![0]);
       if (file.existsSync()) {
         return Image.file(
           file,
@@ -40,9 +40,9 @@ class _CowProfilePageState extends State<CowProfilePage> {
   }
 
   Widget _buildNetworkImage(CattleRecord data) {
-    if (data.imageUrl != null && data.imageUrl!.isNotEmpty) {
+    if (data.imageUrls != null && data.imageUrls!.isNotEmpty) {
       return Image.network(
-        data.imageUrl!,
+        data.imageUrls![0],
         fit: BoxFit.cover,
         width: double.infinity,
         height: 289,
