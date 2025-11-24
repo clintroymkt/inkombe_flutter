@@ -4,9 +4,9 @@ import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
   /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
-  ///
-  /// [faceEmbeddingsList]: List of face embeddings from the scanned image (typically 3 embeddings)
-  /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (typically 3 embeddings)
+
+  /// [faceEmbeddingsList]: List of face embeddings from the scanned image (3 embeddings)
+  /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (3 embeddings)
   /// Returns a list of matches sorted by combined similarity score
   Future<List<Map<String, dynamic>>> checkSimilarity({
     required List<List<double>> faceEmbeddingsList,
@@ -21,8 +21,8 @@ class CosineSimilarityCheck {
       _validateInputs(faceEmbeddingsList, noseEmbeddingsList);
 
       // Fetch cattle data from Firestore
-      // final snapshot = await DatabaseService().getAllSingleUserCattle(); Original
-      final snapshot = await DatabaseService().getAllCattle();
+      final snapshot = await DatabaseService().getAllSingleUserCattle();
+      // final snapshot = await DatabaseService().getAllCattle();
       if (snapshot.docs.isEmpty) return [];
 
       // Parse and filter stored cows
