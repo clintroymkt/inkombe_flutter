@@ -34,7 +34,7 @@ class CattleSyncService {
     }
   }
 
-  // Sync individual cattle record (moved from CattleRepository)
+  // Sync individual cattle record
   static Future<bool> _syncCattleRecord(String cattleId) async {
     try {
       final localData = CattleRepository.getCattleBox()?.get(cattleId);
@@ -43,41 +43,50 @@ class CattleSyncService {
       final cattleRecord = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
       // 1. Upload image to Firebase Storage if not already done
-      String? imageUrl = cattleRecord.imageUrl;
-      if (imageUrl == null && cattleRecord.imagePath != null) {
-        final imageFile = File(cattleRecord.imagePath!);
-        imageUrl = await _uploadCattleImage(imageFile, cattleId);
+      List<String>? imageUrls = cattleRecord.imageUrls;
+      if ((imageUrls == null || imageUrls.isEmpty) && cattleRecord.localImagePaths != null) {
+        // Convert file paths to File objects for upload
+        final List<File> imageFiles = cattleRecord.localImagePaths!
+            .map((path) => File(path))
+            .where((file) => file.existsSync())
+            .toList();
 
-        // Update local record with image URL
-        if (imageUrl != null) {
-          // Create updated record with image URL
-          final updatedRecord = CattleRecord(
-            id: cattleRecord.id,
-            age: cattleRecord.age,
-            breed: cattleRecord.breed,
-            sex: cattleRecord.sex,
-            diseasesAilments: cattleRecord.diseasesAilments,
-            height: cattleRecord.height,
-            name: cattleRecord.name,
-            weight: cattleRecord.weight,
-            imagePath: cattleRecord.imagePath,
-            imageUrl: imageUrl,
-            faceEmbeddings: cattleRecord.faceEmbeddings,
-            noseEmbeddings: cattleRecord.noseEmbeddings,
-            date: cattleRecord.date,
-            ownerUid: cattleRecord.ownerUid,
-            isSynced: cattleRecord.isSynced,
-            lastSyncAttempt: cattleRecord.lastSyncAttempt,
-            syncAttempts: cattleRecord.syncAttempts,
-          );
+        if (imageFiles.isNotEmpty) {
+          imageUrls = await _uploadCattleImage(imageFiles, cattleId);
 
-          await _storeCattleLocally(updatedRecord, localData['localImageId']);
+          // Update local record with image URL
+          if (imageUrls != null && imageUrls.isNotEmpty) {
+            final updatedRecord = CattleRecord(
+              id: cattleRecord.id,
+              age: cattleRecord.age,
+              breed: cattleRecord.breed,
+              sex: cattleRecord.sex,
+              diseasesAilments: cattleRecord.diseasesAilments,
+              height: cattleRecord.height,
+              name: cattleRecord.name,
+              weight: cattleRecord.weight,
+              localImagePaths: cattleRecord.localImagePaths,
+              imageUrls: imageUrls,
+              faceEmbeddings: cattleRecord.faceEmbeddings,
+              noseEmbeddings: cattleRecord.noseEmbeddings,
+              date: cattleRecord.date,
+              ownerUid: cattleRecord.ownerUid,
+              isSynced: cattleRecord.isSynced,
+              lastSyncAttempt: cattleRecord.lastSyncAttempt,
+              syncAttempts: cattleRecord.syncAttempts,
+            );
+
+            await _storeCattleLocally(updatedRecord);
+          }
         }
       }
 
-      // 2. Upload cattle data to Firestore
+      // 2. Upload cattle data to Firestore (without local paths)
+      final firestoreData = cattleRecord.toJson();
+      firestoreData.remove('localImagePaths'); // Don't send local paths to Firestore
+
       final cattleRepository = CattleRepository();
-      await cattleRepository.cattleCollection.doc(cattleId).set(cattleRecord.toJson(), SetOptions(merge: true));
+      await cattleRepository.cattleCollection.doc(cattleId).set(firestoreData, SetOptions(merge: true));
 
       // 3. Mark as synced and remove from queue
       await _markAsSynced(cattleId);
@@ -91,20 +100,31 @@ class CattleSyncService {
   }
 
   // Upload cattle image to Firebase Storage
-  static Future<String?> _uploadCattleImage(File imageFile, String cattleId) async {
+  static Future<List<String>?> _uploadCattleImage(List<File> imageFiles, String cattleId) async {
     try {
+      List<String> downloadUrls = [];
       final cattleRepository = CattleRepository();
-      final ref = cattleRepository.storage.ref().child('cattle_images/${cattleRepository.currentUser?.uid}/$cattleId.jpg');
-      final uploadTask = ref.putFile(
-        imageFile,
-        SettableMetadata(
-          contentType: 'image/jpeg',
-          customMetadata: {'uploaded_from': 'cattle_app'},
-        ),
-      );
+      int count = 0;
 
-      final taskSnapshot = await uploadTask;
-      return await taskSnapshot.ref.getDownloadURL();
+      for (File file in imageFiles) {
+        final ref = cattleRepository.storage.ref().child(
+            'cattle_images/${cattleRepository.currentUser?.uid}/$cattleId _ $count.jpg'
+        );
+        final uploadTask = ref.putFile(
+          file,
+          SettableMetadata(
+            contentType: 'image/jpeg',
+            customMetadata: {'uploaded_from': 'cattle_app'},
+          ),
+        );
+
+        final taskSnapshot = await uploadTask;
+        final downloadUrl = await taskSnapshot.ref.getDownloadURL();
+        downloadUrls.add(downloadUrl);
+        count += 1;
+      }
+
+      return downloadUrls;
     } catch (e) {
       debugPrint('Image upload failed: $e');
       return null;
@@ -112,10 +132,8 @@ class CattleSyncService {
   }
 
   // Store cattle record locally
-  static Future<void> _storeCattleLocally(CattleRecord record, String imageId) async {
-    final cattleData = record.toJson();
-    cattleData['localImageId'] = imageId; // Reference to cached image
-    await CattleRepository.getCattleBox()?.put(record.id, cattleData);
+  static Future<void> _storeCattleLocally(CattleRecord record) async {
+    await CattleRepository.getCattleBox()?.put(record.id, record.toJson());
   }
 
   // Mark record as synced
@@ -144,20 +162,13 @@ class CattleSyncService {
 
   // Notify user of sync failure
   static Future<void> _notifySyncFailure(String cattleId) async {
-    // You can implement notification logic here
-    // For example: show a snackbar, send local notification, or log to analytics
     debugPrint('Sync failed after 3 attempts for cattle: $cattleId');
-
-    // Optional: You could show a notification to the user
-    // ScaffoldMessenger.of(context).showSnackBar(...);
+    // You can implement notification logic here
   }
 
   // Handle failed sync after max attempts
   static Future<void> _handleFailedSync(String cattleId, Map<dynamic, dynamic> queueItem) async {
     debugPrint('Moving cattle $cattleId to failed sync queue');
-
-    // You could move it to a separate "failed" queue or mark it for manual intervention
-    // For now, we'll just leave it in the queue but marked as failed
     await CattleRepository.getSyncQueueBox()?.put(cattleId, {
       ...queueItem,
       'status': 'failed',
@@ -185,11 +196,6 @@ class CattleSyncService {
       return localCattle;
     }
   }
-
-  // static Future<CattleRecord> getSingleCow(String cowId) async{
-  //
-  // }
-
 
   // Get local cattle records
   static Future<List<CattleRecord>> _getLocalCattle() async {
@@ -226,7 +232,7 @@ class CattleSyncService {
       List<CattleRecord> online,
       ) {
     final merged = <CattleRecord>[];
-    final onlineMap = {for (var cattle in online) cattle.id!: cattle};
+    final onlineMap = {for (var cattle in online) cattle.id: cattle};
 
     for (final localCattle in local) {
       if (onlineMap.containsKey(localCattle.id)) {
@@ -249,14 +255,14 @@ class CattleSyncService {
         merged.add(onlineCattle);
 
         // Cache the online record locally
-        _storeCattleLocally(onlineCattle, '');
+        _storeCattleLocally(onlineCattle);
       }
     }
 
     return merged;
   }
 
-  // get single cow
+  // Get single cow
   static Future<CattleRecord?> getSingleCow(String cowId) async {
     try {
       // 1. First check local storage (fastest, works offline)
@@ -287,7 +293,7 @@ class CattleSyncService {
             final onlineCattle = CattleRecord.fromJson(data);
 
             // Cache the online record locally for future offline access
-            await _storeCattleLocally(onlineCattle, '');
+            await _storeCattleLocally(onlineCattle);
 
             return onlineCattle;
           } else {
@@ -318,7 +324,6 @@ class CattleSyncService {
       return null;
     }
   }
-
 
   // Get unsynced cattle count
   static int getUnsyncedCount() {
