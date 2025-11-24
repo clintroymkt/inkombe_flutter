@@ -37,13 +37,19 @@ class CattleRepository {
     required String height,
     required String name,
     required String weight,
-    required String imagePath, // Local file path
+    required List<File>? images,
     required List<List<double>> faceEmbeddings,
     required List<List<double>> noseEmbeddings,
     required String date,
   }) async {
     try {
       final cattleId = 'cattle_${DateTime.now().microsecondsSinceEpoch}_${currentUser?.uid}';
+
+      // Convert File objects to file paths for local storage
+      List<String>? imagePaths;
+      if (images != null) {
+        imagePaths = images.map((file) => file.path).toList();
+      }
 
       // Create cattle record
       final cattleRecord = CattleRecord(
@@ -55,18 +61,17 @@ class CattleRepository {
         height: height,
         name: name,
         weight: weight,
-        imagePath: imagePath,
+        localImagePaths: imagePaths, // Store paths instead of File objects
         faceEmbeddings: faceEmbeddings,
         noseEmbeddings: noseEmbeddings,
         date: date,
         ownerUid: currentUser?.uid,
         isSynced: false,
+        imageUrls: [],
       );
 
-
-
       // 2. Store cattle record locally
-      await _storeCattleLocally(cattleRecord, imagePath);
+      await _storeCattleLocally(cattleRecord);
 
       // 3. Add to sync queue for online synchronization
       await _addToSyncQueue(cattleId);
@@ -84,11 +89,8 @@ class CattleRepository {
   }
 
   // Store cattle record locally
-  Future<void> _storeCattleLocally(CattleRecord record, String imageId) async {
-    final cattleData = record.toJson();
-    cattleData['localImageId'] = imageId; // Reference to cached image
-
-    await _cattleBox?.put(record.id, cattleData);
+  Future<void> _storeCattleLocally(CattleRecord record) async {
+    await _cattleBox?.put(record.id, record.toJson());
   }
 
   // Add to sync queue
@@ -111,40 +113,49 @@ class CattleRepository {
       final cattleRecord = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
       // 1. Upload image to Firebase Storage if not already done
-      String? imageUrl = cattleRecord.imageUrl;
-      if (imageUrl == null && cattleRecord.imagePath != null) {
-        final imageFile = File(cattleRecord.imagePath!);
-        imageUrl = await _uploadCattleImage(imageFile, cattleId);
+      List<String>? imageUrls = cattleRecord.imageUrls;
+      if ((imageUrls == null || imageUrls.isEmpty) && cattleRecord.localImagePaths != null) {
+        // Convert file paths back to File objects for upload
+        final List<File> imageFiles = cattleRecord.localImagePaths!
+            .map((path) => File(path))
+            .where((file) => file.existsSync())
+            .toList();
 
-        // Update local record with image URL
-        if (imageUrl != null) {
-          // Create updated record with image URL
-          final updatedRecord = CattleRecord(
-            id: cattleRecord.id,
-            age: cattleRecord.age,
-            breed: cattleRecord.breed,
-            sex: cattleRecord.sex,
-            diseasesAilments: cattleRecord.diseasesAilments,
-            height: cattleRecord.height,
-            name: cattleRecord.name,
-            weight: cattleRecord.weight,
-            imagePath: cattleRecord.imagePath,
-            imageUrl: imageUrl,
-            faceEmbeddings: cattleRecord.faceEmbeddings,
-            noseEmbeddings: cattleRecord.noseEmbeddings,
-            date: cattleRecord.date,
-            ownerUid: cattleRecord.ownerUid,
-            isSynced: cattleRecord.isSynced,
-            lastSyncAttempt: cattleRecord.lastSyncAttempt,
-            syncAttempts: cattleRecord.syncAttempts,
-          );
+        if (imageFiles.isNotEmpty) {
+          imageUrls = await await _uploadCattleImage(imageFiles, cattleId);
 
-          await _storeCattleLocally(updatedRecord, localData['localImageId']);
+          // Update local record with image URLs
+          if (imageUrls != null) {
+            final updatedRecord = CattleRecord(
+              id: cattleRecord.id,
+              age: cattleRecord.age,
+              breed: cattleRecord.breed,
+              sex: cattleRecord.sex,
+              diseasesAilments: cattleRecord.diseasesAilments,
+              height: cattleRecord.height,
+              name: cattleRecord.name,
+              weight: cattleRecord.weight,
+              localImagePaths: cattleRecord.localImagePaths,
+              imageUrls: imageUrls,
+              faceEmbeddings: cattleRecord.faceEmbeddings,
+              noseEmbeddings: cattleRecord.noseEmbeddings,
+              date: cattleRecord.date,
+              ownerUid: cattleRecord.ownerUid,
+              isSynced: cattleRecord.isSynced,
+              lastSyncAttempt: cattleRecord.lastSyncAttempt,
+              syncAttempts: cattleRecord.syncAttempts,
+            );
+
+            await _storeCattleLocally(updatedRecord);
+          }
         }
       }
 
-      // 2. Upload cattle data to Firestore
-      await cattleCollection.doc(cattleId).set(cattleRecord.toJson(), SetOptions(merge: true));
+      // 2. Upload cattle data to Firestore (without localImagePaths)
+      final firestoreData = cattleRecord.toJson();
+      firestoreData.remove('localImagePaths'); // Don't send local paths to Firestore
+
+      await cattleCollection.doc(cattleId).set(firestoreData, SetOptions(merge: true));
 
       // 3. Mark as synced and remove from queue
       await _markAsSynced(cattleId);
@@ -158,19 +169,28 @@ class CattleRepository {
   }
 
   // Upload cattle image to Firebase Storage
-  Future<String?> _uploadCattleImage(File imageFile, String cattleId) async {
+  Future<List<String>?> _uploadCattleImage(List<File> imageFiles, String cattleId) async {
     try {
-      final ref = storage.ref().child('cattle_images/${currentUser?.uid}/$cattleId.jpg');
-      final uploadTask = ref.putFile(
-        imageFile,
-        SettableMetadata(
-          contentType: 'image/jpeg',
-          customMetadata: {'uploaded_from': 'cattle_app'},
-        ),
-      );
+      int count = 0;
+      List<String> downloadUrls = [];
 
-      final taskSnapshot = await uploadTask;
-      return await taskSnapshot.ref.getDownloadURL();
+      for (File file in imageFiles) {
+        final ref = storage.ref().child(
+            'cattle_images/${currentUser?.uid}/$cattleId _ $count.jpg');
+        final uploadTask = ref.putFile(
+          file,
+          SettableMetadata(
+            contentType: 'image/jpeg',
+            customMetadata: {'uploaded_from': 'cattle_app'},
+          ),
+        );
+
+        final taskSnapshot = await uploadTask;
+        downloadUrls.add(await taskSnapshot.ref.getDownloadURL());
+        count += 1;
+      }
+
+      return downloadUrls;
     } catch (e) {
       debugPrint('Image upload failed: $e');
       return null;
