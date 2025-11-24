@@ -331,7 +331,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
           height: '1.4', // Get from your form
           name: _nameController.text,
           weight: '450', // Get from your form
-          imagePath: _images![0].path,
+          images: _images,
           faceEmbeddings: faceEmbeddingsList!,
           noseEmbeddings: noseEmbeddingsList!,
           date: DateTime.now().toString(),
