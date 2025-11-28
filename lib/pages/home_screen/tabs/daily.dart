@@ -1,24 +1,42 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:inkombe_flutter/services/cattle_sync_service.dart';
 
-import '../../../services/database_service.dart';
+import '../../../services/cattle_record.dart';
 import '../../../widgets/list_card.dart';
-
 
 class DailyTab extends StatefulWidget {
   const DailyTab({super.key});
 
   @override
   State<DailyTab> createState() => _DailyTabState();
-
 }
 
 class _DailyTabState extends State<DailyTab> {
-
   Stream<QuerySnapshot>? updates;
+  Future<List<CattleRecord>>? cattleFuture;
 
   void preloadUpdates() {
-    updates = DatabaseService().getCattleUpdates();
+    cattleFuture = CattleSyncService.getAllCattle();
+  }
+
+  void refreshData() {
+    setState(() {
+      cattleFuture = CattleSyncService.getAllCattle();
+    });
+  }
+
+  String? _getFirstImagePath(CattleRecord doc) {
+    // First try local image paths
+    if (doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty) {
+      return doc.localImagePaths![0];
+    }
+    // Then try image URLs
+    if (doc.imageUrls != null && doc.imageUrls!.isNotEmpty) {
+      return doc.imageUrls![0];
+    }
+    // Return null if no images available
+    return null;
   }
 
   @override
@@ -53,22 +71,50 @@ class _DailyTabState extends State<DailyTab> {
         IntrinsicHeight(
           child: Container(
             color: const Color(0xFFFFFFFF),
-            padding: const EdgeInsets.only(top: 20, bottom: 20, left: 16, right: 16),
+            padding:
+                const EdgeInsets.only(top: 20, bottom: 20, left: 16, right: 16),
             margin: const EdgeInsets.only(bottom: 31),
             width: double.infinity,
-            child: StreamBuilder(
-              stream: updates,
-              builder: (context, AsyncSnapshot snapshot) {
-                if (snapshot.hasData) {
-                  var docs = snapshot.data.docs;
+            child: FutureBuilder<List<CattleRecord>>(
+              future: cattleFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading cattle: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: refreshData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (snapshot.hasData) {
+                  final docs = snapshot.data!;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (doc in docs)
+                      for (final doc in docs)
                         ListCard(
-                          title: doc.data()['name'].toString(),
-                          date: doc.data()['date'].toString(),
-                          imageUri: doc.data()['image'].toString(),
+                          title: doc.name,
+                          date: doc.date,
+                          imagePath: _getFirstImagePath(doc),
+                          imageUri: doc.imageUrls?.isNotEmpty == true
+                              ? doc.imageUrls![0]
+                              : null,
                           docId: doc.id,
                         ),
                     ],
@@ -147,7 +193,8 @@ class _DailyTabState extends State<DailyTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    margin: EdgeInsets.only(bottom: 12, left: 2),
+                                    margin:
+                                        EdgeInsets.only(bottom: 12, left: 2),
                                     child: Text(
                                       'Dipping',
                                       style: TextStyle(
@@ -158,7 +205,8 @@ class _DailyTabState extends State<DailyTab> {
                                   ),
                                   IntrinsicHeight(
                                     child: Container(
-                                      margin: EdgeInsets.only(bottom: 8, left: 6, right: 6),
+                                      margin: EdgeInsets.only(
+                                          bottom: 8, left: 6, right: 6),
                                       width: double.infinity,
                                       child: Row(
                                         children: [
