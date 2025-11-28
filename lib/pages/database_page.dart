@@ -14,12 +14,10 @@ class DatabasePage extends StatefulWidget {
 
 class _DatabasePageState extends State<DatabasePage> {
   Future<List<CattleRecord>>? cattleFuture;
-  // Stream<QuerySnapshot>? updates;
   User? currentUser = FirebaseAuth.instance.currentUser;
   final CattleSyncService _cattleSync = CattleSyncService();
 
   void preloadUpdates() {
-    // updates = DatabaseService().getCattleUpdates2();
     cattleFuture = CattleSyncService.getAllCattle();
     print(currentUser?.uid);
   }
@@ -39,6 +37,20 @@ class _DatabasePageState extends State<DatabasePage> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  // Helper method to get the first available image
+  String? _getFirstImagePath(CattleRecord doc) {
+    // First try local image paths
+    if (doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty) {
+      return doc.localImagePaths![0];
+    }
+    // Then try image URLs
+    if (doc.imageUrls != null && doc.imageUrls!.isNotEmpty) {
+      return doc.imageUrls![0];
+    }
+    // Return null if no images available
+    return null;
   }
 
   @override
@@ -98,7 +110,6 @@ class _DatabasePageState extends State<DatabasePage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              // Refresh button to manually reload data
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                                 child: GestureDetector(
@@ -165,6 +176,7 @@ class _DatabasePageState extends State<DatabasePage> {
                                     ),
                                   );
                                 } else if (snapshot.hasData) {
+
                                   final docs = snapshot.data!;
 
                                   if (docs.isEmpty) {
@@ -183,19 +195,24 @@ class _DatabasePageState extends State<DatabasePage> {
                                     );
                                   }
 
+                                  for (final doc in docs){
+                                   print(doc.imageUrls);
+                                   print(doc.localImagePaths);
+                                  }
+
                                   return Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       for (final doc in docs)
-                                          ListCard(
-                                            title: doc.name,
-                                            date: doc.date,
-e                                            imagePath: doc.localImagePaths![0],
-                                            imageUri: doc.imageUrls?[0],
-                                            docId: doc.id!,
-                                          ),
-
-
+                                        ListCard(
+                                          title: doc.name,
+                                          date: doc.date,
+                                          imagePath: _getFirstImagePath(doc),
+                                          imageUri: doc.imageUrls?.isNotEmpty == true
+                                              ? doc.imageUrls![0]
+                                              : null,
+                                          docId: doc.id,
+                                        ),
                                     ],
                                   );
                                 } else {
