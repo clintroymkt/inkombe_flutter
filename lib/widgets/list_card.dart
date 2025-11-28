@@ -18,10 +18,7 @@ class ListCard extends StatefulWidget {
     required this.docId,
     this.imageUri,
     this.imagePath,
-  }) : assert(
-  imageUri != null || imagePath != null,
-  'Either imageUri or imagePath must be provided',
-  );
+  });
 
   @override
   State<ListCard> createState() => _ListCardState();
