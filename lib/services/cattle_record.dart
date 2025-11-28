@@ -7,7 +7,7 @@ class CattleRecord {
   final String height;
   final String name;
   final String weight;
-  final List<String>? localImagePaths; // Store file paths instead of File objects
+  final List<String>? localImagePaths;
   final List<String>? imageUrls;
   final List<List<double>> faceEmbeddings;
   final List<List<double>> noseEmbeddings;
@@ -26,7 +26,7 @@ class CattleRecord {
     required this.height,
     required this.name,
     required this.weight,
-    this.localImagePaths, // Changed from List<File>?
+    this.localImagePaths,
     this.imageUrls,
     required this.faceEmbeddings,
     required this.noseEmbeddings,
@@ -47,7 +47,7 @@ class CattleRecord {
       'height': height,
       'name': name,
       'weight': weight,
-      'localImagePaths': localImagePaths, // Store paths instead of File objects
+      'localImagePaths': localImagePaths,
       'imageUrls': imageUrls,
       'faceEmbeddings': faceEmbeddings,
       'noseEmbeddings': noseEmbeddings,
@@ -61,38 +61,51 @@ class CattleRecord {
 
   factory CattleRecord.fromJson(Map<String, dynamic> json) {
     return CattleRecord(
-      id: json['id'] ?? '',
-      age: json['age'] ?? '',
-      breed: json['breed'] ?? '',
-      sex: json['sex'] ?? '',
-      diseasesAilments: json['diseasesAilments'] ?? '',
-      height: json['height'] ?? '',
-      name: json['name'] ?? '',
-      weight: json['weight'] ?? '',
-
+      id: json['id']?.toString() ?? '',
+      age: json['age']?.toString() ?? '',
+      breed: json['breed']?.toString() ?? '',
+      sex: json['sex']?.toString() ?? '',
+      diseasesAilments: json['diseasesAilments']?.toString() ?? '',
+      height: json['height']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      weight: json['weight']?.toString() ?? '',
       localImagePaths: json['localImagePaths'] != null
           ? List<String>.from(json['localImagePaths'])
           : null,
-
       imageUrls: json['imageUrls'] != null
           ? List<String>.from(json['imageUrls'])
           : null,
-
-      faceEmbeddings: json['faceEmbeddings'] != null
-          ? List<List<double>>.from(json['faceEmbeddings'].map(
-              (e) => List<double>.from(e)))
-          : [],
-
-      noseEmbeddings: json['noseEmbeddings'] != null
-          ? List<List<double>>.from(json['noseEmbeddings'].map(
-              (e) => List<double>.from(e)))
-          : [],
-
-      date: json['date'] ?? '',
-      ownerUid: json['ownerUid'],
+      faceEmbeddings: _parseEmbeddings(json['faceEmbeddings']),
+      noseEmbeddings: _parseEmbeddings(json['noseEmbeddings']),
+      date: json['date']?.toString() ?? '',
+      ownerUid: json['ownerUid']?.toString(),
       isSynced: json['isSynced'] ?? false,
       lastSyncAttempt: json['lastSyncAttempt'],
       syncAttempts: json['syncAttempts'] ?? 0,
     );
+  }
+
+  static List<List<double>> _parseEmbeddings(dynamic embeddingsData) {
+    if (embeddingsData == null) return [];
+
+    try {
+      if (embeddingsData is List) {
+        return embeddingsData.map<List<double>>((embedding) {
+          if (embedding is List) {
+            return embedding.map<double>((value) {
+              if (value is double) return value;
+              if (value is int) return value.toDouble();
+              if (value is String) return double.tryParse(value) ?? 0.0;
+              return 0.0;
+            }).toList();
+          }
+          return [];
+        }).toList();
+      }
+    } catch (e) {
+      print('Error parsing embeddings: $e');
+    }
+
+    return [];
   }
 }
