@@ -4,6 +4,8 @@ import 'package:inkombe_flutter/services/cattle_sync_service.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
 
+import '../utils/Utilities.dart';
+
 class CowProfilePage extends StatefulWidget {
   final String docId;
   const CowProfilePage({super.key, required this.docId});
@@ -38,12 +40,6 @@ class _CowProfilePageState extends State<CowProfilePage> {
 
     // Priority 2: Use network image from Firebase Storage
     return _buildNetworkImage(data);
-  }
-
-  static String formatWithTime(String date) {
-    DateTime dateTime = DateTime.parse(date);
-    String formattedDate = DateFormat('EEEE, MMMM d, yyyy - hh:mm a').format(dateTime);
-    return formattedDate;
   }
 
   Widget _buildNetworkImage(CattleRecord data) {
@@ -347,7 +343,7 @@ class _CowProfilePageState extends State<CowProfilePage> {
                         _buildInfoRow("Height:", "${data.height} m"),
                         _buildInfoRow("Weight:", "${data.weight} kg"),
                         _buildInfoRow("Health Status:", data.diseasesAilments),
-                        _buildInfoRow("Date Added:", formatWithTime(data.date),
+                        _buildInfoRow("Date Added:", Utilities.formatLongDateTime(data.date),
 
                         ),
                         const SizedBox(height: 24),
