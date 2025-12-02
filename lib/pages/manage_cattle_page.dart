@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
+import 'package:inkombe_flutter/widgets/CustomButton.dart';
+import 'package:inkombe_flutter/widgets/color_theme.dart';
 import '../services/cattle_record.dart';
 import '../widgets/list_card.dart';
 
@@ -14,13 +17,31 @@ class ManageCattlePage extends StatefulWidget {
 
 class _ManageCattlePageState extends State<ManageCattlePage> {
   Future<List<CattleRecord>>? cattleFuture;
+  List<CattleRecord>? cattleRecords;
   User? currentUser = FirebaseAuth.instance.currentUser;
-  final CattleSyncService _cattleSync = CattleSyncService();
 
   void preloadUpdates() {
     cattleFuture = CattleSyncService.getAllCattle();
-    print(currentUser?.uid);
   }
+
+  Future<void> syncCattleData() async {
+    final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
+    final cattleList = <CattleRecord>[];
+
+    for (final key in allKeys) {
+      final data = CattleRepository.getCattleBox()?.get(key);
+      if (data != null) {
+        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+      }
+    }
+
+    for (var cattle in cattleList){
+      debugPrint(cattle.id);
+     var state = await CattleSyncService.forceSync(cattle.id);
+     debugPrint(state? 'true':'false');
+    }
+  }
+
 
   void refreshData() {
     setState(() {
@@ -110,24 +131,12 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                                child: GestureDetector(
-                                  onTap: refreshData,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        'Refresh Data',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CustomButton(icon: Icons.refresh, text: 'Refresh', onPressed: refreshData, backgroundColor: ThemeColors.secondary()),
+                                  CustomButton(icon: Icons.cloud_upload, text: 'Sync Data', onPressed: syncCattleData, backgroundColor: ThemeColors.secondary()),
+                                ]
                               ),
                             ],
                           ),
