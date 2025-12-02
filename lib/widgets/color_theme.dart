@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class ColourTheme {
+class ThemeColors {
   // Primary style (your original)
-  static (Color, Color) primary() {
-    return (const Color(0xFF064151), Colors.white);
+  static Color primary() {
+    return const Color(0xFF064151);
   }
 
   // Secondary style
-  static (Color, Color) secondary() {
-    return (Colors.grey[300]!, Colors.black87);
+  static Color secondary() {
+    return const Color(0xFF4CAF50);
   }
 
   // Danger style
@@ -22,7 +22,7 @@ class ColourTheme {
   }
 
   // Success style
-  static (Color, Color) success() {
-    return (Colors.green[700]!, Colors.white);
+  static Color success() {
+    return const Color(0xFF4CAF50);
   }
 }
