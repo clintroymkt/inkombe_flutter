@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../pages/cow_profile_page.dart';
+import '../utils/Utilities.dart';
 
 class ListCard extends StatefulWidget {
   final String docId;
@@ -133,7 +134,8 @@ class _ListCardState extends State<ListCard> {
                                 child: SizedBox(
                                   width: double.infinity,
                                   child: Text(
-                                    widget.date.isNotEmpty ? widget.date : 'NA',
+                                    widget.date != '' ?  Utilities.formatShortDateTime(widget.date): 'NA',
+
                                     style: const TextStyle(
                                       color: Color(0x333E9249),
                                       fontSize: 12,
