@@ -20,10 +20,10 @@ class CattleSyncService {
         final attempts = queueItem['attempts'] ?? 0;
 
         if (attempts < 3) { // Max 3 attempts
-          final success = await CattleRepository().syncCattleRecord(cattleId);
+          final state = await CattleRepository().syncCattleRecord(cattleId);
 
-          if (!success && attempts >= 2) {
-            // Final attempt failed, notify user
+
+          if (state == 'failed' && attempts >= 2) {
             await _notifySyncFailure(cattleId);
           }
         } else {
@@ -215,8 +215,8 @@ class CattleSyncService {
   }
 
   // Force sync for a specific cattle record
-  static Future<bool> forceSync(String cattleId) async {
-    if (!await NetworkService.isOnline()) return false;
+  static Future<String> forceSync(String cattleId) async {
+    if (!await NetworkService.isOnline()) return 'offline';
     return await CattleRepository().syncCattleRecord(cattleId);
   }
 }
