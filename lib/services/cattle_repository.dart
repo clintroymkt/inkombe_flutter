@@ -106,16 +106,19 @@ class CattleRepository {
     });
   }
 
-  // Sync individual cattle record
-  Future<bool> syncCattleRecord(String cattleId) async {
+  /// @return no cattle means cow not found
+  /// @return skip means already synced
+  /// @return synced means synchronised
+  /// @return failed means failed to sync
+  Future<String> syncCattleRecord(String cattleId) async {
     try {
       final localData = _cattleBox?.get(cattleId);
-      if (localData == null) return false;
+      if (localData == null) return 'no cattle';
 
       final cattleRecord = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
       if ( cattleRecord.isSynced){
-        return true;
+        return 'skip';
       }
 
       // 1. Upload image to Firebase Storage if not already done
@@ -178,11 +181,11 @@ class CattleRepository {
       // 4. Mark as synced and remove from queue
       await _markAsSynced(cattleId);
 
-      return true;
+      return 'synced';
     } catch (e) {
       debugPrint('Sync failed for cattle $cattleId: $e');
       await _incrementSyncAttempts(cattleId);
-      return false;
+      return 'failed';
     }
   }
 
