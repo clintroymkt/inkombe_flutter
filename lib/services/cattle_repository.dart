@@ -4,26 +4,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive/hive.dart';
+import 'package:inkombe_flutter/services/database_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'cattle_record.dart';
 import 'network_service.dart';
+import 'package:uuid/uuid.dart';
+
 
 class CattleRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage storage = FirebaseStorage.instance;
-  final CollectionReference cattleCollection = FirebaseFirestore.instance.collection('cattle');
+  final CollectionReference cattleCollection = DatabaseService().cattleCollection;
   final User? currentUser = FirebaseAuth.instance.currentUser;
   CollectionReference get cattleCollectionRef => cattleCollection;
   static const String _cattleBoxName = 'cattle_records';
   static const String _syncQueueBoxName = 'cattle_sync_queue';
   static Box? _cattleBox;
   static Box? _syncQueueBox;
+  final uuid = Uuid();
 
   static Future<void> init() async {
     final directory = await getApplicationDocumentsDirectory();
     Hive.init(directory.path);
-
-
     _cattleBox = await Hive.openBox(_cattleBoxName);
     _syncQueueBox = await Hive.openBox(_syncQueueBoxName);
   }
@@ -43,7 +45,7 @@ class CattleRepository {
     required String date,
   }) async {
     try {
-      final cattleId = 'cattle_${DateTime.now().microsecondsSinceEpoch}_${currentUser?.uid}';
+      String cattleId = uuid.v1();
 
       // Convert File objects to file paths for local storage
       List<String>? imagePaths;
@@ -78,7 +80,7 @@ class CattleRepository {
 
       // 4. Try immediate sync if online
       if (await NetworkService.isOnline()) {
-        await _syncCattleRecord(cattleId);
+        await syncCattleRecord(cattleId);
       }
 
       return cattleId;
@@ -104,13 +106,20 @@ class CattleRepository {
     });
   }
 
-  // Sync individual cattle record
-  Future<bool> _syncCattleRecord(String cattleId) async {
+  /// @return no cattle means cow not found
+  /// @return skip means already synced
+  /// @return synced means synchronised
+  /// @return failed means failed to sync
+  Future<String> syncCattleRecord(String cattleId) async {
     try {
       final localData = _cattleBox?.get(cattleId);
-      if (localData == null) return false;
+      if (localData == null) return 'no cattle';
 
       final cattleRecord = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+
+      if ( cattleRecord.isSynced){
+        return 'skip';
+      }
 
       // 1. Upload image to Firebase Storage if not already done
       List<String>? imageUrls = cattleRecord.imageUrls;
@@ -153,18 +162,30 @@ class CattleRepository {
 
       // 2. Upload cattle data to Firestore (without localImagePaths)
       final firestoreData = cattleRecord.toJson();
+
+      // 3. serialize lists of embeddings for upload
+      final serializedFaceEmbeddings = cattleRecord.faceEmbeddings.asMap().map(
+            (index, embedding) => MapEntry(index.toString(), embedding),
+      );
+
+      final serializedNoseEmbeddings = cattleRecord.noseEmbeddings.asMap().map(
+            (index, embedding) => MapEntry(index.toString(), embedding),
+      );
       firestoreData.remove('localImagePaths'); // Don't send local paths to Firestore
+
+      firestoreData['faceEmbeddings'] =serializedFaceEmbeddings;
+      firestoreData['noseEmbeddings'] = serializedNoseEmbeddings;
 
       await cattleCollection.doc(cattleId).set(firestoreData, SetOptions(merge: true));
 
-      // 3. Mark as synced and remove from queue
+      // 4. Mark as synced and remove from queue
       await _markAsSynced(cattleId);
 
-      return true;
+      return 'synced';
     } catch (e) {
       debugPrint('Sync failed for cattle $cattleId: $e');
       await _incrementSyncAttempts(cattleId);
-      return false;
+      return 'failed';
     }
   }
 

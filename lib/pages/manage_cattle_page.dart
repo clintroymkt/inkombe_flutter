@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
+import 'package:inkombe_flutter/widgets/CustomButton.dart';
+import 'package:inkombe_flutter/widgets/color_theme.dart';
 import '../services/cattle_record.dart';
+import '../widgets/custom_alert_dialog_for_sync.dart';
 import '../widgets/list_card.dart';
 
 class ManageCattlePage extends StatefulWidget {
@@ -14,13 +18,67 @@ class ManageCattlePage extends StatefulWidget {
 
 class _ManageCattlePageState extends State<ManageCattlePage> {
   Future<List<CattleRecord>>? cattleFuture;
+  List<CattleRecord>? cattleRecords;
   User? currentUser = FirebaseAuth.instance.currentUser;
-  final CattleSyncService _cattleSync = CattleSyncService();
 
   void preloadUpdates() {
     cattleFuture = CattleSyncService.getAllCattle();
-    print(currentUser?.uid);
   }
+
+  // Sync function
+  /// @callback onProgress is for tracking records handled
+  /// @callback synced is for counting actual synced records
+  /// @callback failed is for tracking failed records
+  /// @callback skipped is for tracking skipped records, these records would already be synchronized
+  ///
+  Future<void> syncCattleData(
+      void Function(int) onProgress,
+      void Function(int) synced,
+      void Function(int) failed,
+      void Function(int) skipped)
+  async {
+    final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
+    final cattleList = <CattleRecord>[];
+
+    // Load all cattle records
+    for (final key in allKeys) {
+      final data = CattleRepository.getCattleBox()?.get(key);
+      if (data != null) {
+        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+      }
+    }
+
+    // Sync each cattle with progress updates
+    for (int i = 0; i < cattleList.length; i++) {
+      final cattle = cattleList[i];
+      debugPrint('Syncing: ${cattle.id}');
+
+      // Your sync logic
+      final state = await CattleSyncService.forceSync(cattle.id);
+
+      if (state == 'no cattle')
+      {
+        failed(i + 1);
+      } else if (state == 'failed') {
+        failed(i + 1);
+
+      }
+      else if (state == 'skip'){
+        skipped(i + 1);
+      } else if (state == 'synced'){
+        synced(i + 1);
+      }
+      debugPrint('Sync result: $state');
+
+
+      // Update progress (i+1 because we want 1-based counting)
+      onProgress(i + 1);
+
+      // Optional delay to prevent overwhelming server
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
 
   void refreshData() {
     setState(() {
@@ -110,24 +168,27 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                                child: GestureDetector(
-                                  onTap: refreshData,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        'Refresh Data',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CustomButton(icon: Icons.refresh, text: 'Refresh', onPressed: refreshData, backgroundColor: ThemeColors.secondary()),
+                            CustomButton(
+                              icon: Icons.cloud_upload,
+                              text: 'Sync Data',
+                              backgroundColor: ThemeColors.secondary(),
+                              onPressed: () {
+                                // Show the progress dialog
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false, // Prevent closing by tapping outside
+                                  builder: (context) => SyncProgressDialog(
+                                    totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
+                                    syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
                                   ),
-                                ),
+                                );
+                              },
+                            ),
+                                ]
                               ),
                             ],
                           ),
