@@ -1,7 +1,4 @@
-import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'cattle_record.dart';
 import 'cattle_repository.dart';
@@ -9,7 +6,7 @@ import 'network_service.dart';
 
 class CattleSyncService {
   // Process all pending sync operations
-  static Future<void> processSyncQueue() async {
+  static Future<void> processSyncToCloudQueue() async {
     if (!await NetworkService.isOnline()) return;
 
     final queueItems = CattleRepository.getSyncQueueBox()?.keys.toList() ?? [];
@@ -20,7 +17,7 @@ class CattleSyncService {
         final attempts = queueItem['attempts'] ?? 0;
 
         if (attempts < 3) { // Max 3 attempts
-          final state = await CattleRepository().syncCattleRecord(cattleId);
+          final state = await CattleRepository().syncCattleToCloudRecord(cattleId);
 
 
           if (state == 'failed' && attempts >= 2) {
@@ -82,11 +79,15 @@ class CattleSyncService {
 
     for (final key in allKeys) {
       final data = CattleRepository.getCattleBox()?.get(key);
+      // print(data['localImagePaths']);
       if (data != null) {
         cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
       }
     }
-
+    // for (CattleRecord cow in cattleList){
+    //   print(cow.imageUrls);
+    //   print(cow.localImagePaths);
+    // }
     return cattleList;
   }
 
@@ -100,6 +101,10 @@ class CattleSyncService {
     return querySnapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
       data['id'] = doc.id;
+      print(data['name']);
+      print(data['imageUrls']);
+      print(data['localImagePaths']);
+
       return CattleRecord.fromJson(data);
     }).toList();
   }
@@ -204,19 +209,19 @@ class CattleSyncService {
   }
 
   // Get unsynced cattle count
-  static int getUnsyncedCount() {
+  static int getUnsyncedToCloudCount() {
     final queueItems = CattleRepository.getSyncQueueBox()?.keys.toList() ?? [];
     return queueItems.length;
   }
 
   // Clear all sync queues (for testing/debugging)
-  static Future<void> clearSyncQueue() async {
+  static Future<void> clearSyncToCloudQueue() async {
     await CattleRepository.getSyncQueueBox()?.clear();
   }
 
   // Force sync for a specific cattle record
-  static Future<String> forceSync(String cattleId) async {
+  static Future<String> forceSyncToCloud(String cattleId) async {
     if (!await NetworkService.isOnline()) return 'offline';
-    return await CattleRepository().syncCattleRecord(cattleId);
+    return await CattleRepository().syncCattleToCloudRecord(cattleId);
   }
 }
