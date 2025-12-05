@@ -1,14 +1,17 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:inkombe_flutter/services/cattle_record.dart';
+import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
   /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
-  ///
+  ///@param mode indicates whether its an online scan or offline scan
   /// [faceEmbeddingsList]: List of face embeddings from the scanned image (typically 3 embeddings)
   /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (typically 3 embeddings)
   /// Returns a list of matches sorted by combined similarity score
   Future<List<Map<String, dynamic>>> checkSimilarity({
+    required String mode,
     required List<List<double>> faceEmbeddingsList,
     required List<List<double>> noseEmbeddingsList,
     double faceWeight = 0.6,
@@ -22,24 +25,61 @@ class CosineSimilarityCheck {
 
       // Fetch cattle data from Firestore
       // final snapshot = await DatabaseService().getAllSingleUserCattle(); Original
-      final snapshot = await DatabaseService().getAllCattle();
-      if (snapshot.docs.isEmpty) return [];
+      if (mode == 'online') {
+        print('online');
 
-      // Parse and filter stored cows
-      final storedCows = _parseStoredCows(snapshot.docs);
-      if (storedCows.isEmpty) return [];
+        final snapshot = await DatabaseService().getAllCattle();
+        if (snapshot.docs.isEmpty) return [];
 
-      // Compare embeddings and get matches
-      final matches = _findMatches(
-        faceEmbeddingsList,
-        noseEmbeddingsList,
-        storedCows,
-        faceWeight,
-        noseWeight,
-      );
+        // Parse and filter stored cows
+        final onlineCows = _parseOnlineCattle(snapshot.docs);
+        if (onlineCows.isEmpty) return [];
+        // Compare embeddings and get matches
+        final matches = _findMatches(
+          faceEmbeddingsList,
+          noseEmbeddingsList,
+          onlineCows,
+          faceWeight,
+          noseWeight,
+        );
 
-      // Sort and filter results
-      return _filterAndSortMatches(matches, highThreshold, lowThreshold);
+        // Sort and filter results
+        return _filterAndSortMatches(matches, highThreshold, lowThreshold);
+      }
+      //offline transaction
+      else {
+        print('offline');
+        final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
+        final cattleList = <CattleRecord>[];
+
+        // Load all cattle records
+        for (final key in allKeys) {
+          final data = CattleRepository.getCattleBox()?.get(key);
+          if (data != null) {
+            cattleList
+                .add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+          }
+        }
+        if (cattleList.isEmpty) return [];
+
+        // Parse and filter offline cows
+        final offlineCows = _parseOfflineCattle(cattleList);
+        print('here');
+
+        if (offlineCows.isEmpty) return [];
+        print('offline cows here');
+
+        final matches = _findMatches(
+            faceEmbeddingsList,
+            noseEmbeddingsList,
+            offlineCows,
+            faceWeight,
+            noseWeight
+        );
+
+        // Sort and filter results
+        return _filterAndSortMatches(matches, highThreshold, lowThreshold);
+      }
     } on FirebaseException catch (e) {
       print('Firestore error: $e');
       return [];
@@ -51,9 +91,9 @@ class CosineSimilarityCheck {
 
   /// Validates that input embeddings are not empty and have matching lengths
   void _validateInputs(
-      List<List<double>> faceEmbeddingsList,
-      List<List<double>> noseEmbeddingsList,
-      ) {
+    List<List<double>> faceEmbeddingsList,
+    List<List<double>> noseEmbeddingsList,
+  ) {
     if (faceEmbeddingsList.isEmpty || noseEmbeddingsList.isEmpty) {
       throw StateError('Input embeddings cannot be empty');
     }
@@ -63,22 +103,68 @@ class CosineSimilarityCheck {
   }
 
   /// Parses and filters stored cows from Firestore documents
-  List<Map<String, dynamic>> _parseStoredCows(List<QueryDocumentSnapshot> docs) {
-    return docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+  List<Map<String, dynamic>> _parseOnlineCattle(
+      List<QueryDocumentSnapshot> docs) {
+    return docs
+        .map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
+          final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
+
+          // Filter out empty inner lists
+          final filteredFaceEmbs = faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
+          final filteredNoseEmbs = noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
+
+          return {
+            'id': doc.id,
+            'faceEmbeddings': filteredFaceEmbs,
+            'noseEmbeddings': filteredNoseEmbs,
+            'fullData': data,
+          };
+        })
+        .where((doc) {
+      final face = doc['faceEmbeddings'];
+      final nose = doc['noseEmbeddings'];
+
+      // Now we can just check if lists are empty
+      return face is List &&
+          nose is List &&
+          face.isNotEmpty &&
+          nose.isNotEmpty;
+    })
+        .toList();
+  }
+
+  List<Map<String, dynamic>> _parseOfflineCattle(List<CattleRecord> docs) {
+    return docs
+        .map((doc) {
+      final data = doc.toJson();
+
       final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
       final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
 
+      // Filter out empty inner lists
+      final filteredFaceEmbs = faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
+      final filteredNoseEmbs = noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
+
       return {
         'id': doc.id,
-        'faceEmbeddings': faceEmbs,
-        'noseEmbeddings': noseEmbs,
+        'faceEmbeddings': filteredFaceEmbs,
+        'noseEmbeddings': filteredNoseEmbs,
         'fullData': data,
       };
-    }).where((cow) =>
-    (cow['faceEmbeddings'] as List).isNotEmpty &&
-        (cow['noseEmbeddings'] as List).isNotEmpty
-    ).toList();
+    })
+        .where((doc) {
+      final face = doc['faceEmbeddings'];
+      final nose = doc['noseEmbeddings'];
+
+      // Now we can just check if lists are empty
+      return face is List &&
+          nose is List &&
+          face.isNotEmpty &&
+          nose.isNotEmpty;
+    })
+        .toList();
   }
 
   /// Parses embeddings from Firestore data (handles both List and Map formats)
@@ -91,9 +177,11 @@ class CosineSimilarityCheck {
         if (value.isEmpty) return [];
         // Check if it's List<List> (multiple embeddings)
         if (value.first is List) {
-          return value.map<List<double>>((e) =>
-              (e as List).map<double>((n) => (n as num).toDouble()).toList()
-          ).toList();
+          return value
+              .map<List<double>>((e) => (e as List)
+                  .map<double>((n) => (n as num).toDouble())
+                  .toList())
+              .toList();
         }
         // Single embedding case
         return [value.map<double>((e) => (e as num).toDouble()).toList()];
@@ -101,9 +189,10 @@ class CosineSimilarityCheck {
 
       // Handle Map format (Firestore-style with keys)
       if (value is Map<String, dynamic>) {
-        return value.values.map<List<double>>((e) =>
-            (e as List).map<double>((n) => (n as num).toDouble()).toList()
-        ).toList();
+        return value.values
+            .map<List<double>>((e) =>
+                (e as List).map<double>((n) => (n as num).toDouble()).toList())
+            .toList();
       }
 
       return [];
@@ -115,23 +204,29 @@ class CosineSimilarityCheck {
 
   /// Finds all potential matches by comparing embeddings
   List<Map<String, dynamic>> _findMatches(
-      List<List<double>> faceEmbs,
-      List<List<double>> noseEmbs,
-      List<Map<String, dynamic>> storedCows,
-      double faceWeight,
-      double noseWeight,
-      ) {
+    List<List<double>> faceEmbs,
+    List<List<double>> noseEmbs,
+    List<Map<String, dynamic>> storedCows,
+    double faceWeight,
+    double noseWeight,
+  ) {
+
     return storedCows.map((cow) {
       final cowFaceEmbs = cow['faceEmbeddings'] as List<List<double>>;
       final cowNoseEmbs = cow['noseEmbeddings'] as List<List<double>>;
 
+      print(cowFaceEmbs);
+      print(cowNoseEmbs);
       // Find best match scores
       final faceScore = _findBestMatchScore(faceEmbs, cowFaceEmbs);
       final noseScore = _findBestMatchScore(noseEmbs, cowNoseEmbs);
 
+      print(faceScore);
+      print(noseScore);
       return {
         'id': cow['id'],
-        'combinedSimilarity': (faceScore * faceWeight) + (noseScore * noseWeight),
+        'combinedSimilarity':
+            (faceScore * faceWeight) + (noseScore * noseWeight),
         'faceSimilarity': faceScore,
         'noseSimilarity': noseScore,
         'data': cow['fullData'],
@@ -141,9 +236,9 @@ class CosineSimilarityCheck {
 
   /// Finds the highest similarity score between all combinations of embeddings
   double _findBestMatchScore(
-      List<List<double>> sourceEmbs,
-      List<List<double>> targetEmbs,
-      ) {
+    List<List<double>> sourceEmbs,
+    List<List<double>> targetEmbs,
+  ) {
     double bestScore = 0.0;
     for (final source in sourceEmbs) {
       for (final target in targetEmbs) {
@@ -174,19 +269,21 @@ class CosineSimilarityCheck {
 
   /// Filters and sorts matches based on thresholds
   List<Map<String, dynamic>> _filterAndSortMatches(
-      List<Map<String, dynamic>> matches,
-      double highThreshold,
-      double lowThreshold,
-      ) {
-    matches.sort((a, b) =>
-        (b['combinedSimilarity'] as double).compareTo(a['combinedSimilarity'] as double));
+    List<Map<String, dynamic>> matches,
+    double highThreshold,
+    double lowThreshold,
+  ) {
+    matches.sort((a, b) => (b['combinedSimilarity'] as double)
+        .compareTo(a['combinedSimilarity'] as double));
 
-    final highMatches = matches.where((m) =>
-    (m['combinedSimilarity'] as double) >= highThreshold).toList();
+    final highMatches = matches
+        .where((m) => (m['combinedSimilarity'] as double) >= highThreshold)
+        .toList();
 
     return highMatches.isNotEmpty
         ? highMatches
-        : matches.where((m) =>
-    (m['combinedSimilarity'] as double) >= lowThreshold).toList();
+        : matches
+            .where((m) => (m['combinedSimilarity'] as double) >= lowThreshold)
+            .toList();
   }
 }

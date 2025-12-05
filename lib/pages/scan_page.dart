@@ -156,6 +156,7 @@ class _ScanPageState extends State<ScanPage> {
     try {
       final output = await imageProcessorID.processImage(capturedImages.first);
       final matches = await similarityChecker.checkSimilarity(
+        mode: online?'online':'offline',
         faceEmbeddingsList: [output["faceEmbeddings"]],
         noseEmbeddingsList: [output["noseEmbeddings"]],
       );

@@ -343,7 +343,8 @@ class _CowProfilePageState extends State<CowProfilePage> {
                         _buildInfoRow("Height:", "${data.height} m"),
                         _buildInfoRow("Weight:", "${data.weight} kg"),
                         _buildInfoRow("Health Status:", data.diseasesAilments),
-                        _buildInfoRow("Date Added:", Utilities.formatLongDateTime(data.date),
+                        _buildInfoRow("Date Added:",   data.date != '' ?  Utilities.formatShortDateTime(data.date): 'NA',
+
 
                         ),
                         const SizedBox(height: 24),
