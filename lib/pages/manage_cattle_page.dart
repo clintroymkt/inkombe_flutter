@@ -37,24 +37,16 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
       void Function(int) failed,
       void Function(int) skipped)
   async {
-    final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
-    final cattleList = <CattleRecord>[];
+    final cattleList = CattleRepository().getAllCattle();
 
-    // Load all cattle records
-    for (final key in allKeys) {
-      final data = CattleRepository.getCattleBox()?.get(key);
-      if (data != null) {
-        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
-      }
-    }
 
     // Sync each cattle with progress updates
     for (int i = 0; i < cattleList.length; i++) {
       final cattle = cattleList[i];
-      debugPrint('Syncing: ${cattle.id}');
+      // debugPrint('Syncing: ${cattle.id}');
 
       // Your sync logic
-      final state = await CattleSyncService.forceSync(cattle.id);
+      final state = await CattleSyncService.forceSyncToCloud(cattle.id);
 
       if (state == 'no cattle')
       {
@@ -69,6 +61,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
         synced(i + 1);
       }
       debugPrint('Sync result: $state');
+
 
 
       // Update progress (i+1 because we want 1-based counting)
@@ -101,11 +94,13 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   String? _getFirstImagePath(CattleRecord doc) {
     // First try local image paths
     if (doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty) {
-      return doc.localImagePaths![0];
+      // print( doc.localImagePaths![0]);
+      // return doc.localImagePaths![0];
     }
     // Then try image URLs
     if (doc.imageUrls != null && doc.imageUrls!.isNotEmpty) {
-      return doc.imageUrls![0];
+      // print(doc.imageUrls![0]);
+      // return doc.imageUrls![0];
     }
     // Return null if no images available
     return null;
@@ -256,10 +251,10 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                     );
                                   }
 
-                                  for (final doc in docs){
-                                   print(doc.imageUrls);
-                                   print(doc.localImagePaths);
-                                  }
+                                  // for (final doc in docs){
+                                  //  print(doc.imageUrls);
+                                  //  print(doc.localImagePaths);
+                                  // }
 
                                   return Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

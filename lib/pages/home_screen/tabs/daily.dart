@@ -108,12 +108,15 @@ class _DailyTabState extends State<DailyTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       for (final doc in docs)
+
                         ListCard(
                           title: doc.name,
                           date: doc.date,
-                          imagePath: _getFirstImagePath(doc),
-                          imageUri: doc.imageUrls?.isNotEmpty == true
+                          imageUri: doc.imageUrls != null && doc.imageUrls!.isNotEmpty
                               ? doc.imageUrls![0]
+                              : null,
+                          imagePath: doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty
+                              ? doc.localImagePaths![0]
                               : null,
                           docId: doc.id,
                         ),

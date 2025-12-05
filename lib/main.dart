@@ -24,7 +24,7 @@ Future<void> main() async{
   NetworkService.onNetworkStatusChange.listen((isOnline) {
     if (isOnline) {
       print('Device came online - triggering sync');
-      CattleSyncService.processSyncQueue();
+      CattleSyncService.processSyncToCloudQueue();
     } else {
       print('Device went offline - working locally');
     }

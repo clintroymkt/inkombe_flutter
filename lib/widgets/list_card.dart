@@ -230,8 +230,8 @@ class _ListCardState extends State<ListCard> {
   }
 
   void chechDate() {
-    print(widget.date);
-    print('Image URI: ${widget.imageUri}');
-    print('Image Path: ${widget.imagePath}');
+    // print(widget.date);
+    // print('Image URI: ${widget.imageUri}');
+    // print('Image Path: ${widget.imagePath}');
   }
 }
