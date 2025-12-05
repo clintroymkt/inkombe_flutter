@@ -6,8 +6,8 @@ import 'package:inkombe_flutter/services/cattle_sync_service.dart';
 import 'package:inkombe_flutter/widgets/CustomButton.dart';
 import 'package:inkombe_flutter/widgets/color_theme.dart';
 import '../services/cattle_record.dart';
-import '../widgets/custom_alert_dialog_for_sync.dart';
 import '../widgets/list_card.dart';
+import '../widgets/sync_progress_dialog.dart';
 
 class ManageCattlePage extends StatefulWidget {
   const ManageCattlePage({super.key});
@@ -15,7 +15,7 @@ class ManageCattlePage extends StatefulWidget {
   @override
   State<ManageCattlePage> createState() => _ManageCattlePageState();
 }
-
+//.
 class _ManageCattlePageState extends State<ManageCattlePage> {
   Future<List<CattleRecord>>? cattleFuture;
   List<CattleRecord>? cattleRecords;
