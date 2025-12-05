@@ -104,7 +104,7 @@ class DatabaseService {
   getAllCattle(){
     return cattleCollection
         .orderBy("date", descending:true)
-        .snapshots();
+        .get();
   }
   // for identifying cattle we need static snapshot
   getAllSingleUserCattle() {
