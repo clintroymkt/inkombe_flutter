@@ -80,7 +80,7 @@ class CattleRepository {
 
       // 4. Try immediate sync if online
       if (await NetworkService.isOnline()) {
-        await syncCattleRecord(cattleId);
+        await syncCattleToCloudRecord(cattleId);
       }
 
       return cattleId;
@@ -110,16 +110,16 @@ class CattleRepository {
   /// @return skip means already synced
   /// @return synced means synchronised
   /// @return failed means failed to sync
-  Future<String> syncCattleRecord(String cattleId) async {
+  Future<String> syncCattleToCloudRecord(String cattleId) async {
     try {
       final localData = _cattleBox?.get(cattleId);
       if (localData == null) return 'no cattle';
 
       final cattleRecord = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
-      if ( cattleRecord.isSynced){
-        return 'skip';
-      }
+      // if ( cattleRecord.isSynced){
+      //   return 'skip';
+      // }
 
       // 1. Upload image to Firebase Storage if not already done
       List<String>? imageUrls = cattleRecord.imageUrls;
@@ -247,4 +247,18 @@ class CattleRepository {
 
   // Get sync queue box for external access
   static Box? getSyncQueueBox() => _syncQueueBox;
+
+  List<CattleRecord> getAllCattle(){
+    final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
+    final cattleList = <CattleRecord>[];
+
+    // Load all cattle records
+    for (final key in allKeys) {
+      final data = CattleRepository.getCattleBox()?.get(key);
+      if (data != null) {
+        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+      }
+    }
+    return cattleList;
+  }
 }
