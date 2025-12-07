@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
+import 'package:inkombe_flutter/services/database_service.dart';
 import 'package:inkombe_flutter/widgets/CustomButton.dart';
 import 'package:inkombe_flutter/widgets/color_theme.dart';
 import '../services/cattle_record.dart';
@@ -20,6 +21,8 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   Future<List<CattleRecord>>? cattleFuture;
   List<CattleRecord>? cattleRecords;
   User? currentUser = FirebaseAuth.instance.currentUser;
+
+  int onlineDocsCount = 0;
 
   void preloadUpdates() {
     cattleFuture = CattleSyncService.getAllCattle();
@@ -70,6 +73,23 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
       // Optional delay to prevent overwhelming server
       await Future.delayed(const Duration(milliseconds: 100));
     }
+  }
+
+  Future<void> syncCloudTOLocal( void Function(int) onProgress,
+      void Function(int) synced,
+      void Function(int) failed,
+      void Function(int) skipped) async{
+    final cattleList = DatabaseService().getAllCattle().then((docs){
+      setState(() {
+        onlineDocsCount = docs.size;
+      });
+    });
+
+
+    for (final doc in cattleList){
+      final state = await CattleRepository().syncSingleCattleFromCloud(doc.id);
+    }
+
   }
 
 
@@ -169,7 +189,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                   CustomButton(icon: Icons.refresh, text: 'Refresh', onPressed: refreshData, backgroundColor: ThemeColors.secondary()),
                             CustomButton(
                               icon: Icons.cloud_upload,
-                              text: 'Sync Data',
+                              text: 'Upload Data',
                               backgroundColor: ThemeColors.secondary(),
                               onPressed: () {
                                 // Show the progress dialog
@@ -183,6 +203,23 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                 );
                               },
                             ),
+                                CustomButton(
+                                  icon: Icons.cloud_upload,
+                                  text: 'Download Data',
+                                  backgroundColor: ThemeColors.secondary(),
+                                  onPressed: () {
+                                    // Show the progress dialog
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false, // Prevent closing by tapping outside
+                                      builder: (context) => SyncProgressDialog(
+                                        totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
+                                        syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
+                                      ),
+                                    );
+                                  },
+                                ),
+
                                 ]
                               ),
                             ],
