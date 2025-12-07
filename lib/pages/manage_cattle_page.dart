@@ -189,7 +189,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                   CustomButton(icon: Icons.refresh, text: 'Refresh', onPressed: refreshData, backgroundColor: ThemeColors.secondary()),
                             CustomButton(
                               icon: Icons.cloud_upload,
-                              text: 'Upload Data',
+                              text: 'Sync Data',
                               backgroundColor: ThemeColors.secondary(),
                               onPressed: () {
                                 // Show the progress dialog
@@ -203,22 +203,22 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                 );
                               },
                             ),
-                                CustomButton(
-                                  icon: Icons.cloud_upload,
-                                  text: 'Download Data',
-                                  backgroundColor: ThemeColors.secondary(),
-                                  onPressed: () {
-                                    // Show the progress dialog
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false, // Prevent closing by tapping outside
-                                      builder: (context) => SyncProgressDialog(
-                                        totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
-                                        syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
-                                      ),
-                                    );
-                                  },
-                                ),
+                                // CustomButton(
+                                //   icon: Icons.cloud_upload,
+                                //   text: 'Download Data',
+                                //   backgroundColor: ThemeColors.secondary(),
+                                //   onPressed: () {
+                                //     // Show the progress dialog
+                                //     showDialog(
+                                //       context: context,
+                                //       barrierDismissible: false, // Prevent closing by tapping outside
+                                //       builder: (context) => SyncProgressDialog(
+                                //         totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
+                                //         syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
+                                //       ),
+                                //     );
+                                //   },
+                                // ),
 
                                 ]
                               ),
