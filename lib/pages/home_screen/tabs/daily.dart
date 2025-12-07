@@ -198,7 +198,7 @@ class _DailyTabState extends State<DailyTab> {
                                   Container(
                                     margin:
                                         EdgeInsets.only(bottom: 12, left: 2),
-                                    child: Text(
+                                    child: const Text(
                                       'Dipping',
                                       style: TextStyle(
                                         color: Color(0xFF262626),
@@ -208,7 +208,7 @@ class _DailyTabState extends State<DailyTab> {
                                   ),
                                   IntrinsicHeight(
                                     child: Container(
-                                      margin: EdgeInsets.only(
+                                      margin: const EdgeInsets.only(
                                           bottom: 8, left: 6, right: 6),
                                       width: double.infinity,
                                       child: Row(
