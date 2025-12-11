@@ -16,6 +16,7 @@ class ManageCattlePage extends StatefulWidget {
   @override
   State<ManageCattlePage> createState() => _ManageCattlePageState();
 }
+
 //.
 class _ManageCattlePageState extends State<ManageCattlePage> {
   Future<List<CattleRecord>>? cattleFuture;
@@ -38,60 +39,117 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
       void Function(int) onProgress,
       void Function(int) synced,
       void Function(int) failed,
-      void Function(int) skipped)
-  async {
-    final cattleList = CattleRepository().getAllCattle();
+      void Function(int) skipped) async {
+    try {
+      final cattleList = CattleRepository().getAllCattle();
 
+      // Sync each cattle with progress updates
+      for (int i = 0; i < cattleList.length; i++) {
+        final cattle = cattleList[i];
+        // debugPrint('Syncing: ${cattle.id}');
 
-    // Sync each cattle with progress updates
-    for (int i = 0; i < cattleList.length; i++) {
-      final cattle = cattleList[i];
-      // debugPrint('Syncing: ${cattle.id}');
+        // Your sync logic
+        final state = await CattleSyncService.forceSyncToCloud(cattle.id);
 
-      // Your sync logic
-      final state = await CattleSyncService.forceSyncToCloud(cattle.id);
+        switch (state) {
+          case 'synced':
+            synced(i + 1);
+            break;
+          case 'no cattle':
+          case 'failed':
+            failed(i + 1);
+            break;
+          case 'skip':
+            skipped(i + 1);
+            break;
+          default:
+        }
 
-      if (state == 'no cattle')
-      {
-        failed(i + 1);
-      } else if (state == 'failed') {
-        failed(i + 1);
+        debugPrint('Sync result: $state');
 
+        // Update progress (i+1 because we want 1-based counting)
+        onProgress(i + 1);
+
+        // Optional delay to prevent overwhelming server
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-      else if (state == 'skip'){
-        skipped(i + 1);
-      } else if (state == 'synced'){
-        synced(i + 1);
-      }
-      debugPrint('Sync result: $state');
-
-
-
-      // Update progress (i+1 because we want 1-based counting)
-      onProgress(i + 1);
-
-      // Optional delay to prevent overwhelming server
-      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      debugPrint('Error in syncCattleData: $e');
+      // You might want to call an error callback here
+      rethrow;
     }
   }
 
-  Future<void> syncCloudTOLocal( void Function(int) onProgress,
-      void Function(int) synced,
-      void Function(int) failed,
-      void Function(int) skipped) async{
-    final cattleList = DatabaseService().getAllCattle().then((docs){
+  Future<void> syncCloudToLocal(
+    void Function(int) onProgress, // Changed to double for percentage
+    void Function(int) synced,
+    void Function(int) failed,
+    void Function(int) skipped,
+  ) async {
+    try {
+      // Get all documents from the cloud
+      final querySnapshot = await DatabaseService().getAllCattle();
+
+      // Update the online docs count
       setState(() {
-        onlineDocsCount = docs.size;
+        onlineDocsCount = querySnapshot.size;
       });
-    });
 
+      final documents = querySnapshot.docs;
+      final totalDocs = documents.length;
 
-    for (final doc in cattleList){
-      final state = await CattleRepository().syncSingleCattleFromCloud(doc.id);
+      if (totalDocs == 0) {
+        debugPrint('No documents to sync');
+        return;
+      }
+
+      int syncedCount = 0;
+      int failedCount = 0;
+      int skippedCount = 0;
+
+      for (int i = 0; i < documents.length; i++) {
+        final doc = documents[i];
+
+        final state =
+            await CattleRepository().syncSingleCattleFromCloud(doc.id);
+
+        switch (state) {
+          case 'synced':
+            syncedCount++;
+            synced(syncedCount);
+            break;
+          case 'failed':
+          case 'no found': // Assuming this is a typo, should be 'not found'
+            failedCount++;
+            failed(failedCount);
+            break;
+          case 'skip':
+            skippedCount++;
+            skipped(skippedCount);
+            break;
+          default:
+            debugPrint('Unknown sync state: $state');
+            failedCount++;
+            failed(failedCount);
+        }
+
+        debugPrint('Sync result: $state for document ${doc.id}');
+
+        // Calculate progress percentage
+        onProgress(i + 1);
+
+        // Optional: Add delay to prevent overwhelming the server
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      debugPrint(
+          'Sync completed: $syncedCount synced, $failedCount failed, $skippedCount skipped');
+    } catch (e) {
+      debugPrint('Error in syncCloudToLocal: $e');
+      // You might want to call an error callback here
+      rethrow;
     }
-
   }
-
 
   void refreshData() {
     setState(() {
@@ -159,7 +217,8 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                               ),
                               const SizedBox(height: 30),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 25.0),
                                 child: GestureDetector(
                                   onTap: () {
                                     // Navigator.push(
@@ -184,44 +243,62 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                               ),
                               const SizedBox(height: 30),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CustomButton(icon: Icons.refresh, text: 'Refresh', onPressed: refreshData, backgroundColor: ThemeColors.secondary()),
-                            CustomButton(
-                              icon: Icons.cloud_upload,
-                              text: 'Sync Data',
-                              backgroundColor: ThemeColors.secondary(),
-                              onPressed: () {
-                                // Show the progress dialog
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false, // Prevent closing by tapping outside
-                                  builder: (context) => SyncProgressDialog(
-                                    totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
-                                    syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
-                                  ),
-                                );
-                              },
-                            ),
-                                // CustomButton(
-                                //   icon: Icons.cloud_upload,
-                                //   text: 'Download Data',
-                                //   backgroundColor: ThemeColors.secondary(),
-                                //   onPressed: () {
-                                //     // Show the progress dialog
-                                //     showDialog(
-                                //       context: context,
-                                //       barrierDismissible: false, // Prevent closing by tapping outside
-                                //       builder: (context) => SyncProgressDialog(
-                                //         totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
-                                //         syncFunction: (onProgress, synched, failed, skipped) => syncCattleData(onProgress, synched, failed, skipped),
-                                //       ),
-                                //     );
-                                //   },
-                                // ),
-
-                                ]
-                              ),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    CustomButton(
+                                        icon: Icons.refresh,
+                                        text: 'Refresh',
+                                        onPressed: refreshData,
+                                        backgroundColor:
+                                            ThemeColors.secondary()),
+                                    CustomButton(
+                                      icon: Icons.cloud_upload,
+                                      text: 'Sync Data',
+                                      backgroundColor: ThemeColors.secondary(),
+                                      onPressed: () {
+                                        // Show the progress dialog
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible:
+                                              false, // Prevent closing by tapping outside
+                                          builder: (context) =>
+                                              SyncProgressDialog(
+                                            totalRecords:
+                                                CattleRepository.getCattleBox()
+                                                        ?.keys
+                                                        .length ??
+                                                    0,
+                                            syncFunction: (onProgress, synched,
+                                                    failed, skipped) =>
+                                                syncCattleData(onProgress,
+                                                    synched, failed, skipped),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    CustomButton(
+                                      icon: Icons.cloud_upload,
+                                      text: 'Download Data',
+                                      backgroundColor: ThemeColors.secondary(),
+                                      onPressed: () {
+                                        // Show the progress dialog
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible:
+                                              false, // Prevent closing by tapping outside
+                                          builder: (context) =>
+                                              SyncProgressDialog(
+                                            totalRecords: onlineDocsCount,
+                                            syncFunction: (onProgress, synched,
+                                                    failed, skipped) =>
+                                                syncCloudToLocal(onProgress,
+                                                    synched, failed, skipped),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ]),
                             ],
                           ),
                         ),
@@ -238,27 +315,32 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                         IntrinsicHeight(
                           child: Container(
                             color: const Color(0xFFFFFFFF),
-                            padding: const EdgeInsets.only(top: 20, bottom: 20, left: 16, right: 16),
+                            padding: const EdgeInsets.only(
+                                top: 20, bottom: 20, left: 16, right: 16),
                             margin: const EdgeInsets.only(bottom: 31),
                             width: double.infinity,
                             child: FutureBuilder<List<CattleRecord>>(
                               future: cattleFuture,
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
                                   return const Center(
                                     child: CircularProgressIndicator(),
                                   );
                                 } else if (snapshot.hasError) {
                                   return Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.error, size: 64, color: Colors.red),
+                                        const Icon(Icons.error,
+                                            size: 64, color: Colors.red),
                                         const SizedBox(height: 16),
                                         Text(
                                           'Error loading cattle: ${snapshot.error}',
                                           textAlign: TextAlign.center,
-                                          style: const TextStyle(color: Colors.red),
+                                          style: const TextStyle(
+                                              color: Colors.red),
                                         ),
                                         const SizedBox(height: 16),
                                         ElevatedButton(
@@ -269,19 +351,22 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                     ),
                                   );
                                 } else if (snapshot.hasData) {
-
                                   final docs = snapshot.data!;
 
                                   if (docs.isEmpty) {
                                     return const Center(
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.pets, size: 64, color: Colors.grey),
+                                          Icon(Icons.pets,
+                                              size: 64, color: Colors.grey),
                                           SizedBox(height: 16),
                                           Text(
                                             'No cattle records found',
-                                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 16),
                                           ),
                                         ],
                                       ),
@@ -291,18 +376,23 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                                   // for (final doc in docs){
                                   //  print(doc.imageUrls);
                                   //  print(doc.localImagePaths);
+                                  //  print(doc.image);
                                   // }
 
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       for (final doc in docs)
                                         ListCard(
                                           title: doc.name,
                                           date: doc.date,
                                           imagePath: _getFirstImagePath(doc),
-                                          imageUri: doc.imageUrls?.isNotEmpty == true
+                                          imageUri:
+                                          doc.imageUrls?.isNotEmpty == true
                                               ? doc.imageUrls![0]
+                                              : (doc.image != null && doc.image!.isNotEmpty)
+                                              ? doc.image!
                                               : null,
                                           docId: doc.id,
                                         ),
