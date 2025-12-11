@@ -338,11 +338,11 @@ class CattleRepository {
       if (cattleRecord.imageUrls != null &&
           cattleRecord.imageUrls!.isNotEmpty) {
         debugPrint('Downloading images for cattle: $cattleId');
-        await _downloadAndCacheImages(doc);
+        await _downloadAndCacheImages(cattleRecord);
       } else {
 
       debugPrint('Downloading images for cattle: $cattleId');
-      await _downloadAndCacheImages(doc);
+      await _downloadAndCacheImages(cattleRecord);
       }
 
       // 8. Store cattle record locally
@@ -427,15 +427,15 @@ class CattleRepository {
   }
 
   /// Download and cache images locally
-  Future<void> _downloadAndCacheImages(DocumentSnapshot record) async {
+  Future<void> _downloadAndCacheImages(CattleRecord record) async {
     final List<String> localPaths = [];
     int count =0;
-    if (record['imageUrls'] == null || record['imageUrls']!.isEmpty){
+    if (record.imageUrls == null || record.imageUrls!.isEmpty){
 
-      final url = record['image'];
+      final url = record.image;
       for (int i=0;i<3;i){
         final fileName = '${record.id}_$i.jpg';
-        final localFile = await _downloadImageToLocal(url, fileName);
+        final localFile = await _downloadImageToLocal(url!, fileName);
 
         if (localFile != null) {
           localPaths.add(localFile.path);
@@ -443,7 +443,7 @@ class CattleRepository {
       }
     }else{
 
-      for (final url in record['imageUrls']!) {
+      for (final url in record.imageUrls!) {
         try {
           final fileName = '${record.id}_$count.jpg';
           final localFile = await _downloadImageToLocal(url, fileName);
@@ -464,22 +464,22 @@ class CattleRepository {
     if (localPaths.isNotEmpty) {
       final updatedRecord = CattleRecord(
         id: record.id,
-        age: record['age'],
-        breed: record['breed'],
-        sex: record['sex'],
-        diseasesAilments: record['diseasesAilments'],
-        height: record['height'],
-        name: record['name'],
-        weight: record['weight'],
+        age: record.age,
+        breed: record.breed,
+        sex: record.sex,
+        diseasesAilments: record.diseasesAilments,
+        height: record.height,
+        name: record.name,
+        weight: record.weight,
         localImagePaths: localPaths,
-        imageUrls: record['imageUrls'],
-        faceEmbeddings: record['faceEmbeddings'],
-        noseEmbeddings: record['noseEmbeddings'],
-        date: record['date'],
-        ownerUid: record['ownerUid'],
+        imageUrls: record.imageUrls,
+        faceEmbeddings: record.faceEmbeddings,
+        noseEmbeddings: record.noseEmbeddings,
+        date: record.date,
+        ownerUid: record.ownerUid,
         isSynced: true,
-        lastSyncAttempt: record['lastSyncAttempt'],
-        syncAttempts: record['syncAttempts'],
+        lastSyncAttempt: record.lastSyncAttempt,
+        syncAttempts: record.syncAttempts,
       );
 
       await _storeCattleLocally(updatedRecord);
