@@ -112,8 +112,10 @@ class _DailyTabState extends State<DailyTab> {
                         ListCard(
                           title: doc.name,
                           date: doc.date,
-                          imageUri: doc.imageUrls != null && doc.imageUrls!.isNotEmpty
+                          imageUri:  doc.imageUrls?.isNotEmpty == true
                               ? doc.imageUrls![0]
+                              : (doc.image != null && doc.image!.isNotEmpty)
+                              ? doc.image!
                               : null,
                           imagePath: doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty
                               ? doc.localImagePaths![0]
