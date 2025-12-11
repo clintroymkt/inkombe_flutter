@@ -338,7 +338,11 @@ class CattleRepository {
       if (cattleRecord.imageUrls != null &&
           cattleRecord.imageUrls!.isNotEmpty) {
         debugPrint('Downloading images for cattle: $cattleId');
-        await _downloadAndCacheImages(cattleRecord);
+        await _downloadAndCacheImages(doc);
+      } else {
+
+      debugPrint('Downloading images for cattle: $cattleId');
+      await _downloadAndCacheImages(doc);
       }
 
       // 8. Store cattle record locally
@@ -377,6 +381,7 @@ class CattleRepository {
       imageUrls: cloudData['imageUrls'] is List
           ? List<String>.from(cloudData['imageUrls'])
           : [],
+      image: cloudData['image']?.toString() ?? '',
       faceEmbeddings: faceEmbeddings,
       noseEmbeddings: noseEmbeddings,
       date: cloudData['date']?.toString() ?? '',
@@ -393,7 +398,8 @@ class CattleRepository {
 
     try {
       if (data is Map) {
-        // Firestore stores embeddings as map: {"0": [...], "1": [...]}
+        // Firestore stores embeddings as map: {"0": [256 values], "1": [256 values]}
+        // Each value is a single embedding with 256 elements
         return data.entries.map((entry) {
           if (entry.value is List) {
             return (entry.value as List)
@@ -402,14 +408,16 @@ class CattleRepository {
           }
           return <double>[];
         }).toList();
+
       } else if (data is List) {
-        // Alternative format: directly as list
-        return data.map<List<double>>((item) {
-          if (item is List) {
-            return item.map<double>((v) => v.toDouble()).toList();
-          }
-          return [];
-        }).toList();
+        // ARRAY FORMAT: It's a single embedding with 256 values
+        // Example: [v1, v2, v3, ..., v256]
+
+        // Convert the single array to List<double>
+        List<double> singleEmbedding = data.map<double>((v) => v.toDouble()).toList();
+
+        // Repeat this single embedding 3 times to create 3 identical embeddings
+        return List.generate(3, (_) => singleEmbedding);
       }
     } catch (e) {
       debugPrint('Error deserializing embeddings: $e');
@@ -419,46 +427,59 @@ class CattleRepository {
   }
 
   /// Download and cache images locally
-  Future<void> _downloadAndCacheImages(CattleRecord record) async {
-    if (record.imageUrls == null || record.imageUrls!.isEmpty) return;
-
+  Future<void> _downloadAndCacheImages(DocumentSnapshot record) async {
     final List<String> localPaths = [];
-    int count = 0;
+    int count =0;
+    if (record['imageUrls'] == null || record['imageUrls']!.isEmpty){
 
-    for (final url in record.imageUrls!) {
-      try {
-        final fileName = '${record.id}_$count.jpg';
+      final url = record['image'];
+      for (int i=0;i<3;i){
+        final fileName = '${record.id}_$i.jpg';
         final localFile = await _downloadImageToLocal(url, fileName);
 
         if (localFile != null) {
           localPaths.add(localFile.path);
         }
-        count++;
-      } catch (e) {
-        debugPrint('Failed to download image: $e');
+      }
+    }else{
+
+      for (final url in record['imageUrls']!) {
+        try {
+          final fileName = '${record.id}_$count.jpg';
+          final localFile = await _downloadImageToLocal(url, fileName);
+
+          if (localFile != null) {
+            localPaths.add(localFile.path);
+          }
+          count++;
+        } catch (e) {
+          debugPrint('Failed to download image: $e');
+        }
       }
     }
+
+
 
     // Update record with local paths
     if (localPaths.isNotEmpty) {
       final updatedRecord = CattleRecord(
         id: record.id,
-        age: record.age,
-        breed: record.breed,
-        sex: record.sex,
-        diseasesAilments: record.diseasesAilments,
-        height: record.height,
-        name: record.name,
-        weight: record.weight,
+        age: record['age'],
+        breed: record['breed'],
+        sex: record['sex'],
+        diseasesAilments: record['diseasesAilments'],
+        height: record['height'],
+        name: record['name'],
+        weight: record['weight'],
         localImagePaths: localPaths,
-        imageUrls: record.imageUrls,
-        faceEmbeddings: record.faceEmbeddings,
-        noseEmbeddings: record.noseEmbeddings,
-        date: record.date,
-        ownerUid: record.ownerUid,
+        imageUrls: record['imageUrls'],
+        faceEmbeddings: record['faceEmbeddings'],
+        noseEmbeddings: record['noseEmbeddings'],
+        date: record['date'],
+        ownerUid: record['ownerUid'],
         isSynced: true,
-        lastSyncAttempt: record.lastSyncAttempt,
-        syncAttempts: record.syncAttempts,
+        lastSyncAttempt: record['lastSyncAttempt'],
+        syncAttempts: record['syncAttempts'],
       );
 
       await _storeCattleLocally(updatedRecord);
