@@ -9,6 +9,7 @@ class CattleRecord {
   final String weight;
   final List<String>? localImagePaths;
   final List<String>? imageUrls;
+  final String? image;
   final List<List<double>> faceEmbeddings;
   final List<List<double>> noseEmbeddings;
   final String date;
@@ -28,6 +29,7 @@ class CattleRecord {
     required this.weight,
     this.localImagePaths,
     this.imageUrls,
+    this.image,
     required this.faceEmbeddings,
     required this.noseEmbeddings,
     required this.date,
@@ -49,6 +51,7 @@ class CattleRecord {
       'weight': weight,
       'localImagePaths': localImagePaths,
       'imageUrls': imageUrls,
+      'image':image,
       'faceEmbeddings': faceEmbeddings,
       'noseEmbeddings': noseEmbeddings,
       'date': date,
@@ -75,6 +78,7 @@ class CattleRecord {
       imageUrls: json['imageUrls'] != null
           ? List<String>.from(json['imageUrls'])
           : null,
+      image: json['image']?.toString() ?? '',
       faceEmbeddings: _parseEmbeddings(json['faceEmbeddings']),
       noseEmbeddings: _parseEmbeddings(json['noseEmbeddings']),
       date: json['date']?.toString() ?? '',
