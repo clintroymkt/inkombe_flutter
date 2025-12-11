@@ -101,9 +101,9 @@ class CattleSyncService {
     return querySnapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
       data['id'] = doc.id;
-      print(data['name']);
-      print(data['imageUrls']);
-      print(data['localImagePaths']);
+      // print(data['image']);
+      // print(data['imageUrls']);
+      // print(data['localImagePaths']);
 
       return CattleRecord.fromJson(data);
     }).toList();
