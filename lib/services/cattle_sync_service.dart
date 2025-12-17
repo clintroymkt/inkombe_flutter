@@ -1,4 +1,5 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'cattle_record.dart';
 import 'cattle_repository.dart';
@@ -6,6 +7,8 @@ import 'network_service.dart';
 
 class CattleSyncService {
   // Process all pending sync operations
+
+
   static Future<void> processSyncToCloudQueue() async {
     if (!await NetworkService.isOnline()) return;
 
@@ -55,7 +58,8 @@ class CattleSyncService {
 
   // Get all cattle records (offline-first)
   static Future<List<CattleRecord>> getAllCattle() async {
-    final localCattle = await _getLocalCattle();
+    String? userId = FirebaseAuth.instance.currentUser!.uid;
+    final localCattle = await _getLocalCattle(userId);
     if (await NetworkService.isOnline()) {
       try {
         // Try to get fresh data from Firestore
@@ -73,21 +77,26 @@ class CattleSyncService {
   }
 
   // Get local cattle records
-  static Future<List<CattleRecord>> _getLocalCattle() async {
-    final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
+  static Future<List<CattleRecord>> _getLocalCattle(String ownerUid) async {
+    final box = CattleRepository.getCattleBox();
+    if (box == null) return [];
+
+    final allKeys = box.keys.toList();
     final cattleList = <CattleRecord>[];
 
     for (final key in allKeys) {
-      final data = CattleRepository.getCattleBox()?.get(key);
-      // print(data['localImagePaths']);
+      final data = box.get(key);
       if (data != null) {
-        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+        final cattle = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+
+        // Filter by ownerUid if provided
+        if (cattle.ownerUid == ownerUid) {
+          cattleList.add(cattle);
+        }
       }
     }
-    // for (CattleRecord cow in cattleList){
-    //   print(cow.imageUrls);
-    //   print(cow.localImagePaths);
-    // }
+
+    print(cattleList.length);
     return cattleList;
   }
 
