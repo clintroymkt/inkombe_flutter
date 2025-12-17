@@ -93,15 +93,22 @@ class CattleRecord {
     if (embeddingsData == null) return [];
 
     try {
+      /* ========== 1.  new shape: Map<String,List>  ========== */
+      if (embeddingsData is Map) {
+        final map = embeddingsData.cast<String, List>();
+        // sort by numeric key so 0,1,2 stay in order
+        final sortedEntries = map.entries.toList()
+          ..sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+        return sortedEntries
+            .map((e) => e.value.map<double>((v) => _toDouble(v)).toList())
+            .toList();
+      }
+
+      /* ========== 2.  legacy shape: List<List>  ========== */
       if (embeddingsData is List) {
         return embeddingsData.map<List<double>>((embedding) {
           if (embedding is List) {
-            return embedding.map<double>((value) {
-              if (value is double) return value;
-              if (value is int) return value.toDouble();
-              if (value is String) return double.tryParse(value) ?? 0.0;
-              return 0.0;
-            }).toList();
+            return embedding.map<double>(_toDouble).toList();
           }
           return [];
         }).toList();
@@ -111,5 +118,13 @@ class CattleRecord {
     }
 
     return [];
+  }
+
+/* helper to keep the numeric conversion in one place */
+  static double _toDouble(dynamic v) {
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
   }
 }
