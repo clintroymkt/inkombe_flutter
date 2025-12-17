@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:inkombe_flutter/services/cattle_repository.dart';
 import '../services/cattle_record.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -329,7 +328,7 @@ Future<void> _populateTestData(FakeFirebaseFirestore fakeFirestore) async {
       'image': null,
       'faceEmbeddings': {'0': _embedding256()},
       'noseEmbeddings': {'0': _embedding256()},
-      'date': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+      'date': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
       'ownerUid': 'owner123',
       'isSynced': true,
       'lastSyncAttempt': DateTime.now()
