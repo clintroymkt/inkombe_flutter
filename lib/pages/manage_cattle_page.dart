@@ -88,7 +88,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   ) async {
     try {
       // Get all documents from the cloud
-      final querySnapshot = await DatabaseService().getAllCattle();
+      final querySnapshot = await DatabaseService().getAllSingleUserCattle();
 
       // Update the online docs count
       setState(() {
