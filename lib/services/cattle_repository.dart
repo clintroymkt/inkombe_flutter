@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:inkombe_flutter/services/database_service.dart';
@@ -264,7 +265,7 @@ class CattleRepository {
         final localRecord = CattleRecord.fromJson(
             Map<String, dynamic>.from(localData));
 
-        final cloudTimestamp = _getLastUpdated(cloudData);
+        final cloudTimestamp = cloudData['lastSyncAttempt'] ?? 0;
         final localTimestamp = localRecord.lastSyncAttempt;
 
         final shouldUpdate = cloudTimestamp > (localTimestamp ?? 0) ||
@@ -277,16 +278,55 @@ class CattleRepository {
       }
 
       // Download and cache images
-      await _downloadAndCacheImages(cattleRecord);
+       final localImagePaths = await _downloadAndCacheImages(cattleRecord);
 
-      // Store locally
-      await _storeCattleLocally(cattleRecord);
-      debugPrint('Successfully synced cattle $cattleId from cloud to local');
+      print(localImagePaths);
 
-      String getSyncStatus(CattleRecord cattleRecord) =>
-          cattleRecord.isSynced ? 'synced' : 'sync status did not change on record';
+      if (localImagePaths.isNotEmpty) {
+        final updatedRecord = CattleRecord(
+          id: cattleRecord.id,
+          age: cattleRecord.age,
+          breed: cattleRecord.breed,
+          sex: cattleRecord.sex,
+          diseasesAilments: cattleRecord.diseasesAilments,
+          height: cattleRecord.height,
+          name: cattleRecord.name,
+          weight: cattleRecord.weight,
+          localImagePaths: localImagePaths,
+          imageUrls: cattleRecord.imageUrls,
+          faceEmbeddings: cattleRecord.faceEmbeddings,
+          noseEmbeddings: cattleRecord.noseEmbeddings,
+          date: cattleRecord.date,
+          ownerUid: cattleRecord.ownerUid,
+          isSynced: true,
+          lastSyncAttempt: DateTime.now().millisecondsSinceEpoch,
+          syncAttempts: cattleRecord.syncAttempts,
+        );
 
-      return getSyncStatus(cattleRecord);
+        await _storeCattleLocally(updatedRecord);
+
+        //sync the lastsync attampt to cloud
+        // Prepare Firestore data
+        final firestoreData = updatedRecord.toJson();
+
+        // Serialize embeddings for Firestore
+        firestoreData['faceEmbeddings'] = _serializeEmbeddings(
+            cattleRecord.faceEmbeddings);
+        firestoreData['noseEmbeddings'] = _serializeEmbeddings(
+            cattleRecord.noseEmbeddings);
+        firestoreData.remove('localImagePaths'); // Don't send local paths
+
+        // Upload to Firestore
+        await cattleCollection
+            .doc(cattleId)
+            .set(firestoreData, SetOptions(merge: true));
+
+        return 'synced';
+      }
+
+      return 'no images';
+
+
 
 
     } catch (e, stack) {
@@ -416,8 +456,8 @@ class CattleRepository {
       noseEmbeddings: noseEmbeddings,
       date: cloudData['date']?.toString() ?? '',
       ownerUid: cloudData['ownerUid']?.toString(),
-      isSynced: true,
-      lastSyncAttempt: DateTime.now().millisecondsSinceEpoch,
+      isSynced: cloudData['isSynced'] ?? false,
+      lastSyncAttempt: cloudData['lastSyncAttempt'] ?? 0,
       syncAttempts: 0,
     );
   }
@@ -450,7 +490,7 @@ class CattleRepository {
   }
 
   /// Download and cache images locally
-  Future<void> _downloadAndCacheImages(CattleRecord record) async {
+  Future<List<String>> _downloadAndCacheImages(CattleRecord record) async {
     final List<String> localPaths = [];
     int count = 0;
 
@@ -478,35 +518,22 @@ class CattleRepository {
       }
     }
 
-    if (localPaths.isNotEmpty) {
-      final updatedRecord = CattleRecord(
-        id: record.id,
-        age: record.age,
-        breed: record.breed,
-        sex: record.sex,
-        diseasesAilments: record.diseasesAilments,
-        height: record.height,
-        name: record.name,
-        weight: record.weight,
-        localImagePaths: localPaths,
-        imageUrls: record.imageUrls,
-        faceEmbeddings: record.faceEmbeddings,
-        noseEmbeddings: record.noseEmbeddings,
-        date: record.date,
-        ownerUid: record.ownerUid,
-        isSynced: true,
-        lastSyncAttempt: record.lastSyncAttempt,
-        syncAttempts: record.syncAttempts,
-      );
+    return localPaths;
 
-      await _storeCattleLocally(updatedRecord);
-    }
+
   }
 
   /// Download single image to local storage
   Future<File?> _downloadImageToLocal(String imageUrl, String fileName) async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
+        Directory directory;
+        try {
+          // Try to get application directory
+          directory = await getApplicationDocumentsDirectory();
+        } catch (e) {
+          // If in test environment, use temporary directory
+          directory = Directory.systemTemp;
+        }
       final filePath = '${directory.path}/cattle_images/$fileName';
       final file = File(filePath);
 
@@ -521,20 +548,6 @@ class CattleRepository {
     }
   }
 
-  /// Get last updated timestamp from cloud data
-  int _getLastUpdated(Map<String, dynamic> cloudData) {
-    if (cloudData['updatedAt'] is Timestamp) {
-      return (cloudData['updatedAt'] as Timestamp).millisecondsSinceEpoch;
-    }
-    if (cloudData['lastUpdated'] is Timestamp) {
-      return (cloudData['lastUpdated'] as Timestamp).millisecondsSinceEpoch;
-    }
-    if (cloudData['timestamp'] is Timestamp) {
-      return (cloudData['timestamp'] as Timestamp).millisecondsSinceEpoch;
-    }
-
-    return DateTime.now().millisecondsSinceEpoch;
-  }
 
   // ===========================================================================
   // STATIC ACCESSORS (for backward compatibility)
