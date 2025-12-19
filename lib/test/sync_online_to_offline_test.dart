@@ -45,6 +45,8 @@ void main() {
     mockAuth = MockFirebaseAuth();
     mockUser = MockUser();
 
+
+
     when(mockAuth.currentUser).thenReturn(mockUser);
 
     // 5. Create repository with injected dependencies
@@ -323,9 +325,8 @@ Future<void> _populateTestData(FakeFirebaseFirestore fakeFirestore) async {
       'height': '${100 + rnd.nextInt(50)}',
       'name': 'Cow-${id.substring(0, 4)}',
       'weight': '${300 + rnd.nextInt(300)}',
-      'localImagePaths': null,
       'imageUrls': null,
-      'image': null,
+      'image': 'https://dummy.com/image1.jpg',
       'faceEmbeddings': {'0': _embedding256()},
       'noseEmbeddings': {'0': _embedding256()},
       'date': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
