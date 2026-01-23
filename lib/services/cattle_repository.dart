@@ -12,8 +12,6 @@ import 'cattle_record.dart';
 import 'network_service.dart';
 import 'package:uuid/uuid.dart';
 
-
-
 class CattleRepository {
   // Dependencies
   final FirebaseFirestore _firestore;
@@ -32,6 +30,10 @@ class CattleRepository {
   static const String _syncQueueBoxName = 'cattle_sync_queue';
   static Box? _cattleBox;
   static Box? _syncQueueBox;
+
+  // Pagination Constraints
+  static const int defaultPageSize = 10;
+  static const int maxLocalItemsPerPage = 20;
 
   // ===========================================================================
   // CONSTRUCTORS
@@ -55,13 +57,12 @@ class CattleRepository {
     required Future<bool> Function() isOnline, // Accept function
     required http.Client httpClient,
     required Uuid uuid,
-  }) : _firestore = firestore,
+  })  : _firestore = firestore,
         _auth = auth,
         _storage = storage,
         _isOnline = isOnline, // Store function
         _httpClient = httpClient,
         _uuid = uuid;
-
 
   // ===========================================================================
   // INITIALIZATION
@@ -76,6 +77,265 @@ class CattleRepository {
     Hive.init(directory.path);
     _cattleBox = await Hive.openBox(_cattleBoxName);
     _syncQueueBox = await Hive.openBox(_syncQueueBoxName);
+  }
+
+  // ===========================================================================
+  // PAGINATION METHODS
+  // ===========================================================================
+
+  /// Get paginated cattle from local storage filtered by current user
+  Future<List<CattleRecord>> getLocalCattlePaginated({
+    int limit = defaultPageSize,
+    int offset = 0,
+    String? lastKey,
+  }) async {
+    try {
+      final allKeys = _cattleBox?.keys.toList() ?? [];
+
+      if (allKeys.isEmpty) return [];
+
+      // Get current user ID
+      final String? currentUserId = currentUser?.uid;
+      if (currentUserId == null) {
+        debugPrint('No authenticated user for local pagination');
+        return [];
+      }
+
+      // Get all records first, filtered by current user
+      final allRecords = <({String key, CattleRecord record})>[];
+      for (final key in allKeys) {
+        final data = _cattleBox?.get(key);
+        if (data != null) {
+          try {
+            final record = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+
+            // Filter by current user
+            if (record.ownerUid == currentUserId) {
+              allRecords.add((key: key, record: record));
+            }
+          } catch (e) {
+            debugPrint('Error parsing record for key $key: $e');
+          }
+        }
+      }
+
+      if (allRecords.isEmpty) return [];
+
+      // Sort by lastSyncAttempt descending (newest first), then by key as fallback
+      allRecords.sort((a, b) {
+        final timestampA = a.record.lastSyncAttempt ?? 0;
+        final timestampB = b.record.lastSyncAttempt ?? 0;
+
+        if (timestampB != timestampA) {
+          return timestampB.compareTo(timestampA);
+        }
+
+        // Fallback to key comparison if timestamps are equal
+        return b.key.compareTo(a.key);
+      });
+
+      // Find starting index if lastKey is provided
+      int startIndex = 0;
+      if (lastKey != null) {
+        startIndex = allRecords.indexWhere((item) => item.key == lastKey) + 1;
+        if (startIndex <= 0) startIndex = 0;
+      } else {
+        startIndex = offset;
+      }
+
+      // Get paginated records
+      final endIndex = startIndex + limit;
+      final paginatedItems = allRecords.sublist(
+        startIndex,
+        endIndex < allRecords.length ? endIndex : allRecords.length,
+      );
+
+      // Return just the records
+      return paginatedItems.map((item) => item.record).toList();
+    } catch (e) {
+      debugPrint('Error getting paginated cattle: $e');
+      return [];
+    }
+  }
+
+  /// Get paginated cattle from cloud with offline support
+  Future<({
+  List<CattleRecord> records,
+  DocumentSnapshot? lastDoc,
+  bool hasMore,
+  })> getCloudCattlePaginated({
+    int limit = defaultPageSize,
+    DocumentSnapshot? lastDocument,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      // Check if online
+      final isOnline = await _isOnline();
+
+      if (!isOnline || !forceRefresh) {
+        // Return local data when offline or not forcing refresh
+        final localRecords = await getLocalCattlePaginated(
+          limit: limit,
+          lastKey: lastDocument?.id,
+        );
+
+        // Cast localRecords to List<CattleRecord>
+        final records = localRecords;
+
+        return (
+        records: records,
+        lastDoc: null,
+        hasMore: records.length >= limit,
+        );
+      }
+
+      // Online: Fetch from Firestore
+      Query query = cattleCollection
+          .where('ownerUid', isEqualTo: currentUser?.uid)
+          .orderBy('lastSyncAttempt', descending: true)
+          .limit(limit);
+
+      // Apply startAfter for pagination
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final querySnapshot = await query.get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return (
+        records: <CattleRecord>[],
+        lastDoc: null,
+        hasMore: false,
+        );
+      }
+
+      // Parse documents
+      final records = <CattleRecord>[];
+      for (final doc in querySnapshot.docs) {
+        final cattleRecord = await _parseCloudDocument(
+          doc.data() as Map<String, dynamic>,
+          doc.id,
+        );
+        records.add(cattleRecord);
+
+        // Cache locally
+        await _storeCattleLocally(cattleRecord);
+      }
+
+      final newLastDoc = querySnapshot.docs.last;
+
+      return (
+      records: records,
+      lastDoc: newLastDoc,
+      hasMore: querySnapshot.docs.length >= limit,
+      );
+    } catch (e, stack) {
+      debugPrint('Error in getCloudCattlePaginated: $e\n$stack');
+
+      // Fallback to local data
+      final localRecords = await getLocalCattlePaginated(
+        limit: limit,
+        lastKey: lastDocument?.id,
+      );
+
+      // Cast localRecords to List<CattleRecord>
+      final records = localRecords;
+
+      return (
+      records: records,
+      lastDoc: null,
+      hasMore: records.length >= limit,
+      );
+    }
+  }
+
+  /// Check if there are more local records
+  bool hasMoreLocalRecords({String? lastKey}) {
+    final allKeys = _cattleBox?.keys.toList() ?? [];
+
+    if (allKeys.isEmpty) return false;
+
+    if (lastKey == null) return allKeys.length > defaultPageSize;
+
+    final lastIndex = allKeys.indexOf(lastKey);
+    return lastIndex >= 0 && lastIndex < allKeys.length - 1;
+  }
+
+  /// Merge paginated results (useful for combining local and cloud data)
+  Future<List<CattleRecord>> mergePaginatedResults({
+    required List<CattleRecord> existingRecords,
+    required List<CattleRecord> newRecords,
+  }) async {
+    // Remove duplicates based on ID
+    final existingIds = existingRecords.map((r) => r.id).toSet();
+    final uniqueNewRecords = newRecords
+        .where((record) => !existingIds.contains(record.id))
+        .toList();
+
+    return [...existingRecords, ...uniqueNewRecords];
+  }
+
+  /// Sync with pagination support
+  Future<void> syncWithPagination({
+    int pageSize = 20,
+    void Function(int progress, int total)? onProgress,
+  }) async {
+    try {
+      final isOnline = await _isOnline();
+      if (!isOnline) return;
+
+      // Get all local unsynced records with pagination
+      int offset = 0;
+      bool hasMore = true;
+
+      while (hasMore) {
+        final localRecords = await getLocalCattlePaginated(
+          limit: pageSize,
+          offset: offset,
+        );
+
+        if (localRecords.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        // Filter unsynced records
+        final unsyncedRecords = localRecords
+            .where((record) => !record.isSynced)
+            .toList();
+
+        // Sync each unsynced record
+        for (final record in unsyncedRecords) {
+          await syncCattleToCloudRecord(record.id);
+
+          if (onProgress != null) {
+            onProgress(offset + unsyncedRecords.indexOf(record) + 1,
+                unsyncedRecords.length);
+          }
+        }
+
+        offset += pageSize;
+        hasMore = localRecords.length >= pageSize;
+
+        // Small delay to prevent overwhelming
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    } catch (e) {
+      debugPrint('Error in syncWithPagination: $e');
+    }
+  }
+
+  /// Get all cattle IDs for pagination reference
+  Future<List<String>> getAllCattleIds() async {
+    final allKeys = _cattleBox?.keys.toList() ?? [];
+    return allKeys.whereType<String>().toList();
+  }
+
+  /// Get total count of cattle records
+  Future<int> getTotalCattleCount() async {
+    final allKeys = _cattleBox?.keys.toList() ?? [];
+    return allKeys.length;
   }
 
   // ===========================================================================
@@ -131,7 +391,7 @@ class CattleRepository {
       await _addToSyncQueue(cattleId);
 
       // Try immediate sync if online
-      if (!await _isOnline()) {
+      if (await _isOnline()) {
         await syncCattleToCloudRecord(cattleId);
       }
 
@@ -148,7 +408,6 @@ class CattleRepository {
   /// @return 'synced' means synchronized
   /// @return 'failed' means failed to sync
   Future<String> syncCattleToCloudRecord(String cattleId) async {
-
     try {
       final localData = _cattleBox?.get(cattleId);
       if (localData == null) return 'no cattle';
@@ -198,10 +457,10 @@ class CattleRepository {
       final firestoreData = cattleRecord.toJson();
 
       // Serialize embeddings for Firestore
-      firestoreData['faceEmbeddings'] = _serializeEmbeddings(
-          cattleRecord.faceEmbeddings);
-      firestoreData['noseEmbeddings'] = _serializeEmbeddings(
-          cattleRecord.noseEmbeddings);
+      firestoreData['faceEmbeddings'] =
+          _serializeEmbeddings(cattleRecord.faceEmbeddings);
+      firestoreData['noseEmbeddings'] =
+          _serializeEmbeddings(cattleRecord.noseEmbeddings);
       firestoreData.remove('localImagePaths'); // Don't send local paths
 
       // Upload to Firestore
@@ -219,7 +478,6 @@ class CattleRepository {
       return 'failed';
     }
   }
-
 
   /// Sync single cattle from cloud to local
   Future<String> syncSingleCattleFromCloud(String cattleId) async {
@@ -252,7 +510,8 @@ class CattleRepository {
       final cloudOwnerUid = cloudData['ownerUid']?.toString();
 
       if (cloudOwnerUid != user.uid) {
-        debugPrint('Unauthorized: Cattle $cattleId does not belong to current user');
+        debugPrint(
+            'Unauthorized: Cattle $cattleId does not belong to current user');
         return 'unauthorized';
       }
 
@@ -262,14 +521,14 @@ class CattleRepository {
       // Check if update is needed
       final localData = _cattleBox?.get(cattleId);
       if (localData != null) {
-        final localRecord = CattleRecord.fromJson(
-            Map<String, dynamic>.from(localData));
+        final localRecord =
+        CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
         final cloudTimestamp = cloudData['lastSyncAttempt'] ?? 0;
         final localTimestamp = localRecord.lastSyncAttempt;
 
-        final shouldUpdate = cloudTimestamp > (localTimestamp ?? 0) ||
-            !localRecord.isSynced;
+        final shouldUpdate =
+            cloudTimestamp > (localTimestamp ?? 0) || !localRecord.isSynced;
 
         if (!shouldUpdate) {
           debugPrint('Local version is up-to-date for cattle: $cattleId');
@@ -278,7 +537,7 @@ class CattleRepository {
       }
 
       // Download and cache images
-       final localImagePaths = await _downloadAndCacheImages(cattleRecord);
+      final localImagePaths = await _downloadAndCacheImages(cattleRecord);
 
       print(localImagePaths);
 
@@ -310,10 +569,10 @@ class CattleRepository {
         final firestoreData = updatedRecord.toJson();
 
         // Serialize embeddings for Firestore
-        firestoreData['faceEmbeddings'] = _serializeEmbeddings(
-            cattleRecord.faceEmbeddings);
-        firestoreData['noseEmbeddings'] = _serializeEmbeddings(
-            cattleRecord.noseEmbeddings);
+        firestoreData['faceEmbeddings'] =
+            _serializeEmbeddings(cattleRecord.faceEmbeddings);
+        firestoreData['noseEmbeddings'] =
+            _serializeEmbeddings(cattleRecord.noseEmbeddings);
         firestoreData.remove('localImagePaths'); // Don't send local paths
 
         // Upload to Firestore
@@ -325,17 +584,13 @@ class CattleRepository {
       }
 
       return 'no images';
-
-
-
-
     } catch (e, stack) {
       debugPrint('Error syncing cattle $cattleId from cloud: $e\n$stack');
       return 'failed';
     }
   }
 
-  /// Get all cattle from local storage
+  /// Get all cattle from local storage (for backward compatibility)
   List<CattleRecord> getAllCattle() {
     final allKeys = _cattleBox?.keys.toList() ?? [];
     final cattleList = <CattleRecord>[];
@@ -343,8 +598,7 @@ class CattleRepository {
     for (final key in allKeys) {
       final data = _cattleBox?.get(key);
       if (data != null) {
-        cattleList.add(CattleRecord.fromJson(
-            Map<String, dynamic>.from(data)));
+        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
       }
     }
     return cattleList;
@@ -402,9 +656,8 @@ class CattleRepository {
       List<String> downloadUrls = [];
 
       for (File file in imageFiles) {
-        final ref = _storage
-            .ref()
-            .child('cattle_images/${currentUser?.uid}/$cattleId _ $count.jpg');
+        final ref = _storage.ref().child(
+            'cattle_images/${currentUser?.uid}/$cattleId _ $count.jpg');
         final uploadTask = ref.putFile(
           file,
           SettableMetadata(
@@ -426,7 +679,8 @@ class CattleRepository {
   }
 
   /// Serialize embeddings for Firestore
-  Map<String, List<double>> _serializeEmbeddings(List<List<double>> embeddings) {
+  Map<String, List<double>> _serializeEmbeddings(
+      List<List<double>> embeddings) {
     return embeddings.asMap().map(
           (index, embedding) => MapEntry(index.toString(), embedding),
     );
@@ -470,9 +724,7 @@ class CattleRepository {
       if (data is Map) {
         return data.entries.map((entry) {
           if (entry.value is List) {
-            return (entry.value as List)
-                .map<double>((v) => v.toDouble())
-                .toList();
+            return (entry.value as List).map<double>((v) => v.toDouble()).toList();
           }
           return <double>[];
         }).toList();
@@ -519,21 +771,19 @@ class CattleRepository {
     }
 
     return localPaths;
-
-
   }
 
   /// Download single image to local storage
   Future<File?> _downloadImageToLocal(String imageUrl, String fileName) async {
     try {
-        Directory directory;
-        try {
-          // Try to get application directory
-          directory = await getApplicationDocumentsDirectory();
-        } catch (e) {
-          // If in test environment, use temporary directory
-          directory = Directory.systemTemp;
-        }
+      Directory directory;
+      try {
+        // Try to get application directory
+        directory = await getApplicationDocumentsDirectory();
+      } catch (e) {
+        // If in test environment, use temporary directory
+        directory = Directory.systemTemp;
+      }
       final filePath = '${directory.path}/cattle_images/$fileName';
       final file = File(filePath);
 
@@ -548,7 +798,6 @@ class CattleRepository {
     }
   }
 
-
   // ===========================================================================
   // STATIC ACCESSORS (for backward compatibility)
   // ===========================================================================
@@ -558,4 +807,19 @@ class CattleRepository {
 
   /// Get sync queue box for external access
   static Box? getSyncQueueBox() => _syncQueueBox;
+
+  /// Get paginated data for external use
+  static Future<List<CattleRecord>> getPaginatedCattle({
+    int limit = defaultPageSize,
+    int offset = 0,
+    String? lastKey,
+  }) async {
+    // Create a default instance for static access
+    final repository = CattleRepository();
+    return await repository.getLocalCattlePaginated(
+      limit: limit,
+      offset: offset,
+      lastKey: lastKey,
+    );
+  }
 }
