@@ -5,6 +5,7 @@ import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
+  CattleRepository cattleRepository = CattleRepository();
   /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
   ///@param mode indicates whether its an online scan or offline scan
   /// [faceEmbeddingsList]: List of face embeddings from the scanned image (typically 3 embeddings)
@@ -49,18 +50,7 @@ class CosineSimilarityCheck {
       //offline transaction
       else {
         print('offline');
-        final allKeys = CattleRepository.getCattleBox()?.keys.toList() ?? [];
-        final cattleList = <CattleRecord>[];
-
-        // Load all cattle records
-        for (final key in allKeys) {
-          final data = CattleRepository.getCattleBox()?.get(key);
-          if (data != null) {
-            cattleList
-                .add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
-          }
-        }
-        if (cattleList.isEmpty) return [];
+        final cattleList = cattleRepository.getAlLocallCattle();
 
         // Parse and filter offline cows
         final offlineCows = _parseOfflineCattle(cattleList);
