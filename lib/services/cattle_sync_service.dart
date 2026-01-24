@@ -57,7 +57,7 @@ class CattleSyncService {
   }
 
   // Get all cattle records (offline-first)
-  static Future<List<CattleRecord>> getAllCattle() async {
+  static Future<List<CattleRecord>> getAllMergedCattle() async {
     String? userId = FirebaseAuth.instance.currentUser!.uid;
     final localCattle = await _getLocalCattle(userId);
     if (await NetworkService.isOnline()) {

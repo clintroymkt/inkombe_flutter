@@ -17,12 +17,12 @@ class _DailyTabState extends State<DailyTab> {
   Future<List<CattleRecord>>? cattleFuture;
 
   void preloadUpdates() {
-    cattleFuture = CattleSyncService.getAllCattle();
+    cattleFuture = CattleSyncService.getAllMergedCattle();
   }
 
   void refreshData() {
     setState(() {
-      cattleFuture = CattleSyncService.getAllCattle();
+      cattleFuture = CattleSyncService.getAllMergedCattle();
     });
   }
 
