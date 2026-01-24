@@ -336,7 +336,7 @@ class CattleRepository {
   }
 
   /// Get all cattle from local storage
-  List<CattleRecord> getAllCattle() {
+  List<CattleRecord> getAlLocallCattle() {
     final allKeys = _cattleBox?.keys.toList() ?? [];
     final cattleList = <CattleRecord>[];
 
