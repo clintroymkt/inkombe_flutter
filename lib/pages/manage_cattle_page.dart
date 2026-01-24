@@ -26,7 +26,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   int onlineDocsCount = 0;
 
   void preloadUpdates() {
-    cattleFuture = CattleSyncService.getAllCattle();
+    cattleFuture = CattleSyncService.getAllMergedCattle();
   }
 
   // Sync function
@@ -41,7 +41,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
       void Function(int) failed,
       void Function(int) skipped) async {
     try {
-      final cattleList = CattleRepository().getAllCattle();
+      final cattleList = CattleRepository().getAlLocallCattle();
 
       // Sync each cattle with progress updates
       for (int i = 0; i < cattleList.length; i++) {
@@ -153,7 +153,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
 
   void refreshData() {
     setState(() {
-      cattleFuture = CattleSyncService.getAllCattle();
+      cattleFuture = CattleSyncService.getAllMergedCattle();
     });
   }
 
