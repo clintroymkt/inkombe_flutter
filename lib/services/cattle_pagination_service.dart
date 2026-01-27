@@ -20,6 +20,17 @@ class CattlePaginationService with ChangeNotifier {
   bool _isLoadingMore = false;
   bool _hasInitialized = false;
 
+  // Static cache
+  static PaginationState<CattleRecord>? _cachedState;
+  static firestore.DocumentSnapshot? _cachedLastCloudDoc;
+  static String? _cachedLastLocalKey;
+
+  static void clearCache() {
+    _cachedState = null;
+    _cachedLastCloudDoc = null;
+    _cachedLastLocalKey = null;
+  }
+
   CattlePaginationService({
     CattleRepository? repository,
     this.pageSize = CattleRepository.defaultPageSize,
@@ -32,6 +43,16 @@ class CattlePaginationService with ChangeNotifier {
   /// Initialize and load first page
   Future<void> initialize() async {
     if (_hasInitialized) return;
+
+    // Use cache if available
+    if (_cachedState != null) {
+      _state = _cachedState!;
+      _lastCloudDocument = _cachedLastCloudDoc;
+      _lastLocalKey = _cachedLastLocalKey;
+      _hasInitialized = true;
+      notifyListeners();
+      return;
+    }
 
     _state = _state.copyWith(
       isLoading: true,
@@ -55,6 +76,11 @@ class CattlePaginationService with ChangeNotifier {
         hasMore: result.hasMore,
         isInitialLoad: false,
       );
+
+      // Update cache
+      _cachedState = _state;
+      _cachedLastCloudDoc = _lastCloudDocument;
+      _cachedLastLocalKey = _lastLocalKey;
 
       _hasInitialized = true;
     } catch (e) {
@@ -92,13 +118,19 @@ class CattlePaginationService with ChangeNotifier {
         );
 
         _lastCloudDocument = result.lastDoc;
-        _lastLocalKey = result.records.isNotEmpty ? result.records.last.id : null;
+        _lastLocalKey =
+            result.records.isNotEmpty ? result.records.last.id : null;
 
         _state = _state.copyWith(
           items: mergedItems,
           hasMore: result.hasMore,
         );
       }
+
+      // Update cache
+      _cachedState = _state;
+      _cachedLastCloudDoc = _lastCloudDocument;
+      _cachedLastLocalKey = _lastLocalKey;
     } catch (e) {
       debugPrint('Error loading more: $e');
       _state = _state.copyWith(error: 'Failed to load more items');
@@ -129,6 +161,11 @@ class CattlePaginationService with ChangeNotifier {
         hasMore: result.hasMore,
         error: null,
       );
+
+      // Update cache
+      _cachedState = _state;
+      _cachedLastCloudDoc = _lastCloudDocument;
+      _cachedLastLocalKey = _lastLocalKey;
     } catch (e) {
       _state = _state.copyWith(
         isLoading: false,

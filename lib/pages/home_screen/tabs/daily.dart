@@ -22,7 +22,7 @@ class _DailyTabState extends State<DailyTab> {
 
   void refreshData() {
     setState(() {
-      cattleFuture = CattleSyncService.getAllMergedCattle();
+      cattleFuture = CattleSyncService.getAllMergedCattle(forceRefresh: true);
     });
   }
 
@@ -108,16 +108,16 @@ class _DailyTabState extends State<DailyTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       for (final doc in docs)
-
                         ListCard(
                           title: doc.name,
                           date: doc.date,
-                          imageUri:  doc.imageUrls?.isNotEmpty == true
+                          imageUri: doc.imageUrls?.isNotEmpty == true
                               ? doc.imageUrls![0]
                               : (doc.image != null && doc.image!.isNotEmpty)
-                              ? doc.image!
-                              : null,
-                          imagePath: doc.localImagePaths != null && doc.localImagePaths!.isNotEmpty
+                                  ? doc.image!
+                                  : null,
+                          imagePath: doc.localImagePaths != null &&
+                                  doc.localImagePaths!.isNotEmpty
                               ? doc.localImagePaths![0]
                               : null,
                           docId: doc.id,

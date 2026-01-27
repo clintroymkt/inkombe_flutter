@@ -40,14 +40,15 @@ class CattleRepository {
   // ===========================================================================
 
   /// Default constructor for production use - uses Firebase singletons
-  CattleRepository() : this.withDependencies(
-    firestore: FirebaseFirestore.instance,
-    auth: FirebaseAuth.instance,
-    storage: FirebaseStorage.instance,
-    isOnline: NetworkService.isOnline, // Pass static method
-    httpClient: http.Client(),
-    uuid: Uuid(),
-  );
+  CattleRepository()
+      : this.withDependencies(
+          firestore: FirebaseFirestore.instance,
+          auth: FirebaseAuth.instance,
+          storage: FirebaseStorage.instance,
+          isOnline: NetworkService.isOnline, // Pass static method
+          httpClient: http.Client(),
+          uuid: Uuid(),
+        );
 
   /// Dependency-injected constructor for testing
   CattleRepository.withDependencies({
@@ -107,7 +108,8 @@ class CattleRepository {
         final data = _cattleBox?.get(key);
         if (data != null) {
           try {
-            final record = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+            final record =
+                CattleRecord.fromJson(Map<String, dynamic>.from(data));
 
             // Filter by current user
             if (record.ownerUid == currentUserId) {
@@ -159,11 +161,12 @@ class CattleRepository {
   }
 
   /// Get paginated cattle from cloud with offline support
-  Future<({
-  List<CattleRecord> records,
-  DocumentSnapshot? lastDoc,
-  bool hasMore,
-  })> getCloudCattlePaginated({
+  Future<
+      ({
+        List<CattleRecord> records,
+        DocumentSnapshot? lastDoc,
+        bool hasMore,
+      })> getCloudCattlePaginated({
     int limit = defaultPageSize,
     DocumentSnapshot? lastDocument,
     bool forceRefresh = false,
@@ -183,9 +186,9 @@ class CattleRepository {
         final records = localRecords;
 
         return (
-        records: records,
-        lastDoc: null,
-        hasMore: records.length >= limit,
+          records: records,
+          lastDoc: null,
+          hasMore: records.length >= limit,
         );
       }
 
@@ -204,9 +207,9 @@ class CattleRepository {
 
       if (querySnapshot.docs.isEmpty) {
         return (
-        records: <CattleRecord>[],
-        lastDoc: null,
-        hasMore: false,
+          records: <CattleRecord>[],
+          lastDoc: null,
+          hasMore: false,
         );
       }
 
@@ -226,9 +229,9 @@ class CattleRepository {
       final newLastDoc = querySnapshot.docs.last;
 
       return (
-      records: records,
-      lastDoc: newLastDoc,
-      hasMore: querySnapshot.docs.length >= limit,
+        records: records,
+        lastDoc: newLastDoc,
+        hasMore: querySnapshot.docs.length >= limit,
       );
     } catch (e, stack) {
       debugPrint('Error in getCloudCattlePaginated: $e\n$stack');
@@ -243,9 +246,9 @@ class CattleRepository {
       final records = localRecords;
 
       return (
-      records: records,
-      lastDoc: null,
-      hasMore: records.length >= limit,
+        records: records,
+        lastDoc: null,
+        hasMore: records.length >= limit,
       );
     }
   }
@@ -269,9 +272,8 @@ class CattleRepository {
   }) async {
     // Remove duplicates based on ID
     final existingIds = existingRecords.map((r) => r.id).toSet();
-    final uniqueNewRecords = newRecords
-        .where((record) => !existingIds.contains(record.id))
-        .toList();
+    final uniqueNewRecords =
+        newRecords.where((record) => !existingIds.contains(record.id)).toList();
 
     return [...existingRecords, ...uniqueNewRecords];
   }
@@ -301,9 +303,8 @@ class CattleRepository {
         }
 
         // Filter unsynced records
-        final unsyncedRecords = localRecords
-            .where((record) => !record.isSynced)
-            .toList();
+        final unsyncedRecords =
+            localRecords.where((record) => !record.isSynced).toList();
 
         // Sync each unsynced record
         for (final record in unsyncedRecords) {
@@ -329,13 +330,51 @@ class CattleRepository {
   /// Get all cattle IDs for pagination reference
   Future<List<String>> getAllCattleIds() async {
     final allKeys = _cattleBox?.keys.toList() ?? [];
-    return allKeys.whereType<String>().toList();
+    final String? currentUserId = currentUser?.uid;
+
+    if (currentUserId == null) return [];
+
+    final userCattleIds = <String>[];
+
+    for (final key in allKeys) {
+      final data = _cattleBox?.get(key);
+      if (data != null) {
+        try {
+          final record = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+          if (record.ownerUid == currentUserId) {
+            userCattleIds.add(key.toString());
+          }
+        } catch (e) {
+          debugPrint('Error parsing record for key $key: $e');
+        }
+      }
+    }
+
+    return userCattleIds;
   }
 
   /// Get total count of cattle records
   Future<int> getTotalCattleCount() async {
     final allKeys = _cattleBox?.keys.toList() ?? [];
-    return allKeys.length;
+    final String? currentUserId = currentUser?.uid;
+
+    if (currentUserId == null) return 0;
+
+    int count = 0;
+    for (final key in allKeys) {
+      final data = _cattleBox?.get(key);
+      if (data != null) {
+        try {
+          final record = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+          if (record.ownerUid == currentUserId) {
+            count++;
+          }
+        } catch (e) {
+          debugPrint('Error parsing record for key $key: $e');
+        }
+      }
+    }
+    return count;
   }
 
   // ===========================================================================
@@ -407,13 +446,19 @@ class CattleRepository {
   /// @return 'skip' means already synced
   /// @return 'synced' means synchronized
   /// @return 'failed' means failed to sync
+  /// @return 'unauthorized' means cow belongs to another user
   Future<String> syncCattleToCloudRecord(String cattleId) async {
     try {
       final localData = _cattleBox?.get(cattleId);
       if (localData == null) return 'no cattle';
 
       final cattleRecord =
-      CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+          CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+
+      // Verify ownership
+      if (cattleRecord.ownerUid != currentUser?.uid) {
+        return 'unauthorized';
+      }
 
       // Upload images if needed
       List<String>? imageUrls = cattleRecord.imageUrls;
@@ -522,7 +567,7 @@ class CattleRepository {
       final localData = _cattleBox?.get(cattleId);
       if (localData != null) {
         final localRecord =
-        CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+            CattleRecord.fromJson(Map<String, dynamic>.from(localData));
 
         final cloudTimestamp = cloudData['lastSyncAttempt'] ?? 0;
         final localTimestamp = localRecord.lastSyncAttempt;
@@ -591,14 +636,24 @@ class CattleRepository {
   }
 
   /// Get all cattle from local storage (for backward compatibility)
+  /// Now enforced to always filter by current user
   List<CattleRecord> getAllCattle() {
     final allKeys = _cattleBox?.keys.toList() ?? [];
     final cattleList = <CattleRecord>[];
+    final String? currentUserId = currentUser?.uid;
+
+    if (currentUserId == null) {
+      return [];
+    }
 
     for (final key in allKeys) {
       final data = _cattleBox?.get(key);
       if (data != null) {
-        cattleList.add(CattleRecord.fromJson(Map<String, dynamic>.from(data)));
+        final record = CattleRecord.fromJson(Map<String, dynamic>.from(data));
+        // Strict filtering by current user
+        if (record.ownerUid == currentUserId) {
+          cattleList.add(record);
+        }
       }
     }
     return cattleList;
@@ -656,8 +711,9 @@ class CattleRepository {
       List<String> downloadUrls = [];
 
       for (File file in imageFiles) {
-        final ref = _storage.ref().child(
-            'cattle_images/${currentUser?.uid}/$cattleId _ $count.jpg');
+        final ref = _storage
+            .ref()
+            .child('cattle_images/${currentUser?.uid}/$cattleId _ $count.jpg');
         final uploadTask = ref.putFile(
           file,
           SettableMetadata(
@@ -683,7 +739,7 @@ class CattleRepository {
       List<List<double>> embeddings) {
     return embeddings.asMap().map(
           (index, embedding) => MapEntry(index.toString(), embedding),
-    );
+        );
   }
 
   /// Parse Firestore document into CattleRecord
@@ -724,14 +780,15 @@ class CattleRepository {
       if (data is Map) {
         return data.entries.map((entry) {
           if (entry.value is List) {
-            return (entry.value as List).map<double>((v) => v.toDouble()).toList();
+            return (entry.value as List)
+                .map<double>((v) => v.toDouble())
+                .toList();
           }
           return <double>[];
         }).toList();
-
       } else if (data is List) {
         List<double> singleEmbedding =
-        data.map<double>((v) => v.toDouble()).toList();
+            data.map<double>((v) => v.toDouble()).toList();
         return List.generate(3, (_) => singleEmbedding);
       }
     } catch (e) {

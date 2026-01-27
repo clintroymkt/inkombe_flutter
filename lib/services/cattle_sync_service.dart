@@ -1,4 +1,3 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'cattle_record.dart';
@@ -8,20 +7,35 @@ import 'network_service.dart';
 class CattleSyncService {
   // Process all pending sync operations
 
-
+  // Process all pending sync operations
   static Future<void> processSyncToCloudQueue() async {
     if (!await NetworkService.isOnline()) return;
 
     final queueItems = CattleRepository.getSyncQueueBox()?.keys.toList() ?? [];
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) return;
 
     for (final cattleId in queueItems) {
+      // Check ownership before processing
+      final localData = CattleRepository.getCattleBox()?.get(cattleId);
+      if (localData != null) {
+        final record =
+            CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+        if (record.ownerUid != currentUser.uid) {
+          // Skip records not owned by current user
+          continue;
+        }
+      }
+
       final queueItem = CattleRepository.getSyncQueueBox()?.get(cattleId);
       if (queueItem != null) {
         final attempts = queueItem['attempts'] ?? 0;
 
-        if (attempts < 3) { // Max 3 attempts
-          final state = await CattleRepository().syncCattleToCloudRecord(cattleId);
-
+        if (attempts < 3) {
+          // Max 3 attempts
+          final state =
+              await CattleRepository().syncCattleToCloudRecord(cattleId);
 
           if (state == 'failed' && attempts >= 2) {
             await _notifySyncFailure(cattleId);
@@ -33,7 +47,6 @@ class CattleSyncService {
       }
     }
   }
-
 
   // Store cattle record locally
   static Future<void> _storeCattleLocally(CattleRecord record) async {
@@ -47,7 +60,8 @@ class CattleSyncService {
   }
 
   // Handle failed sync after max attempts
-  static Future<void> _handleFailedSync(String cattleId, Map<dynamic, dynamic> queueItem) async {
+  static Future<void> _handleFailedSync(
+      String cattleId, Map<dynamic, dynamic> queueItem) async {
     debugPrint('Moving cattle $cattleId to failed sync queue');
     await CattleRepository.getSyncQueueBox()?.put(cattleId, {
       ...queueItem,
@@ -56,24 +70,50 @@ class CattleSyncService {
     });
   }
 
+  // Memory cache
+  static List<CattleRecord>? _cachedCattle;
+  static DateTime? _lastCacheTime;
+  static const Duration _cacheValidity = Duration(minutes: 5);
+
+  static void clearCache() {
+    _cachedCattle = null;
+    _lastCacheTime = null;
+  }
+
   // Get all cattle records (offline-first)
-  static Future<List<CattleRecord>> getAllMergedCattle() async {
+  static Future<List<CattleRecord>> getAllMergedCattle(
+      {bool forceRefresh = false}) async {
+    // Check cache
+    if (!forceRefresh &&
+        _cachedCattle != null &&
+        _lastCacheTime != null &&
+        DateTime.now().difference(_lastCacheTime!) < _cacheValidity) {
+      return _cachedCattle!;
+    }
+
     String? userId = FirebaseAuth.instance.currentUser!.uid;
     final localCattle = await _getLocalCattle(userId);
+
+    List<CattleRecord> result;
     if (await NetworkService.isOnline()) {
       try {
         // Try to get fresh data from Firestore
         final onlineCattle = await _getOnlineCattle();
         // Merge strategies: prefer online data, but keep unsynced local changes
-        return _mergeCattleRecords(localCattle, onlineCattle);
+        result = _mergeCattleRecords(localCattle, onlineCattle);
       } catch (e) {
         debugPrint('Failed to fetch online cattle: $e');
         // Fall back to local data
-        return localCattle;
+        result = localCattle;
       }
     } else {
-      return localCattle;
+      result = localCattle;
     }
+
+    // Update cache
+    _cachedCattle = result;
+    _lastCacheTime = DateTime.now();
+    return result;
   }
 
   // Get local cattle records
@@ -120,9 +160,9 @@ class CattleSyncService {
 
   // Merge local and online records
   static List<CattleRecord> _mergeCattleRecords(
-      List<CattleRecord> local,
-      List<CattleRecord> online,
-      ) {
+    List<CattleRecord> local,
+    List<CattleRecord> online,
+  ) {
     final merged = <CattleRecord>[];
     final onlineMap = {for (var cattle in online) cattle.id: cattle};
 
@@ -160,7 +200,14 @@ class CattleSyncService {
       // 1. First check local storage (fastest, works offline)
       final localData = CattleRepository.getCattleBox()?.get(cowId);
       if (localData != null) {
-        final localCattle = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+        final localCattle =
+            CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+
+        // Verify ownership
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null && localCattle.ownerUid != currentUser.uid) {
+          return null;
+        }
 
         // If we have the cow locally and it's synced, return it immediately
         if (localCattle.isSynced) {
@@ -177,7 +224,8 @@ class CattleSyncService {
       if (await NetworkService.isOnline()) {
         try {
           final cattleRepository = CattleRepository();
-          final docSnapshot = await cattleRepository.cattleCollection.doc(cowId).get();
+          final docSnapshot =
+              await cattleRepository.cattleCollection.doc(cowId).get();
 
           if (docSnapshot.exists) {
             final data = docSnapshot.data() as Map<String, dynamic>;
@@ -191,7 +239,8 @@ class CattleSyncService {
           } else {
             // Cow doesn't exist in Firestore, but might exist locally
             if (localData != null) {
-              final localCattle = CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+              final localCattle =
+                  CattleRecord.fromJson(Map<String, dynamic>.from(localData));
               return localCattle; // Return local version even if not synced
             }
           }
@@ -210,7 +259,6 @@ class CattleSyncService {
       }
 
       return null; // Cow not found locally or online
-
     } catch (e) {
       debugPrint('Error getting single cow: $e');
       return null;
@@ -218,9 +266,24 @@ class CattleSyncService {
   }
 
   // Get unsynced cattle count
-  static int getUnsyncedToCloudCount() {
+  static Future<int> getUnsyncedToCloudCount() async {
     final queueItems = CattleRepository.getSyncQueueBox()?.keys.toList() ?? [];
-    return queueItems.length;
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) return 0;
+
+    int count = 0;
+    for (final cattleId in queueItems) {
+      final localData = CattleRepository.getCattleBox()?.get(cattleId);
+      if (localData != null) {
+        final record =
+            CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+        if (record.ownerUid == currentUser.uid) {
+          count++;
+        }
+      }
+    }
+    return count;
   }
 
   // Clear all sync queues (for testing/debugging)

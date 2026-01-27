@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../pages/cow_profile_page.dart';
@@ -134,8 +135,10 @@ class _ListCardState extends State<ListCard> {
                                 child: SizedBox(
                                   width: double.infinity,
                                   child: Text(
-                                    widget.date != '' ?  Utilities.formatShortDateTime(widget.date): 'NA',
-
+                                    widget.date != ''
+                                        ? Utilities.formatShortDateTime(
+                                            widget.date)
+                                        : 'NA',
                                     style: const TextStyle(
                                       color: Color(0x333E9249),
                                       fontSize: 12,
@@ -169,7 +172,8 @@ class _ListCardState extends State<ListCard> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => CowProfilePage(docId: widget.docId)),
+          MaterialPageRoute(
+              builder: (context) => CowProfilePage(docId: widget.docId)),
         );
       },
     );
@@ -183,7 +187,8 @@ class _ListCardState extends State<ListCard> {
         return Image.file(
           file,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildNetworkImageOrPlaceholder(),
+          errorBuilder: (context, error, stackTrace) =>
+              _buildNetworkImageOrPlaceholder(),
         );
       }
     }
@@ -192,26 +197,18 @@ class _ListCardState extends State<ListCard> {
     return _buildNetworkImageOrPlaceholder();
   }
 
-
   Widget _buildNetworkImageOrPlaceholder() {
     if (widget.imageUri != null && widget.imageUri!.isNotEmpty) {
-      return Image.network(
-        widget.imageUri!,
+      return CachedNetworkImage(
+        imageUrl: widget.imageUri!,
         fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[300],
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+        placeholder: (context, url) => Container(
+          color: Colors.grey[300],
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        errorWidget: (context, url, error) => _buildPlaceholder(),
       );
     } else {
       return _buildPlaceholder();

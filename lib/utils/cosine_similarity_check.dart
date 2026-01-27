@@ -50,7 +50,7 @@ class CosineSimilarityCheck {
       //offline transaction
       else {
         print('offline');
-        final cattleList = cattleRepository.getAlLocallCattle();
+        final cattleList = cattleRepository.getAllCattle();
 
         // Parse and filter offline cows
         final offlineCows = _parseOfflineCattle(cattleList);

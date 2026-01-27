@@ -95,7 +95,8 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
             children: [
               // Header/Actions section
               Container(
-                padding: const EdgeInsets.only(top: 20, left: 18, right: 18, bottom: 20),
+                padding: const EdgeInsets.only(
+                    top: 20, left: 18, right: 18, bottom: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -111,24 +112,30 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        CustomButton(
-                          icon: Icons.refresh,
-                          text: 'Refresh',
-                          onPressed: refreshData,
-                          backgroundColor: ThemeColors.secondary(),
-                        ),
+                        // CustomButton(
+                        //   icon: Icons.refresh,
+                        //   text: 'Refresh',
+                        //   onPressed: refreshData,
+                        //   backgroundColor: ThemeColors.secondary(),
+                        // ),
                         CustomButton(
                           icon: Icons.cloud_upload,
                           text: 'Sync Data',
                           backgroundColor: ThemeColors.secondary(),
-                          onPressed: () {
+                          onPressed: () async {
+                            final total =
+                                await CattleRepository().getTotalCattleCount();
+                            if (!context.mounted) return;
+
                             showDialog(
                               context: context,
                               barrierDismissible: false,
                               builder: (context) => SyncProgressDialog(
-                                totalRecords: CattleRepository.getCattleBox()?.keys.length ?? 0,
-                                syncFunction: (onProgress, synched, failed, skipped) =>
-                                    syncCattleData(onProgress, synched, failed, skipped),
+                                totalRecords: total,
+                                syncFunction: (onProgress, synched, failed,
+                                        skipped) =>
+                                    syncCattleData(
+                                        onProgress, synched, failed, skipped),
                               ),
                             );
                           },
@@ -137,14 +144,24 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                           icon: Icons.cloud_download,
                           text: 'Download',
                           backgroundColor: ThemeColors.secondary(),
-                          onPressed: () {
+                          onPressed: () async {
+                            final total =
+                                await DatabaseService().getOnlineCattleCount();
+                            setState(() {
+                              onlineDocsCount = total;
+                            });
+
+                            if (!context.mounted) return;
+
                             showDialog(
                               context: context,
                               barrierDismissible: false,
                               builder: (context) => SyncProgressDialog(
-                                totalRecords: onlineDocsCount,
-                                syncFunction: (onProgress, synched, failed, skipped) =>
-                                    syncCloudToLocal(onProgress, synched, failed, skipped),
+                                totalRecords: total,
+                                syncFunction: (onProgress, synched, failed,
+                                        skipped) =>
+                                    syncCloudToLocal(
+                                        onProgress, synched, failed, skipped),
                               ),
                             );
                           },
@@ -163,7 +180,8 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         child: Text(
                           'Cattle (${_paginationService.state.items.length})',
                           style: const TextStyle(
@@ -198,14 +216,16 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
 
   Widget _buildContent() {
     // Loading indicator for initial load
-    if (_paginationService.state.isInitialLoad && _paginationService.isLoading) {
+    if (_paginationService.state.isInitialLoad &&
+        _paginationService.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
     // Empty state
-    if (_paginationService.state.items.isEmpty && !_paginationService.isLoading) {
+    if (_paginationService.state.items.isEmpty &&
+        !_paginationService.isLoading) {
       return PaginationEmptyState(
         message: 'No cattle records found',
         icon: Icons.pets,
@@ -245,8 +265,8 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
               imageUri: cattle.imageUrls?.isNotEmpty == true
                   ? cattle.imageUrls![0]
                   : (cattle.image != null && cattle.image!.isNotEmpty)
-                  ? cattle.image!
-                  : null,
+                      ? cattle.image!
+                      : null,
               docId: cattle.id,
             ),
           );
@@ -302,11 +322,11 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
 
   // Paste your existing syncCloudToLocal method here
   Future<void> syncCloudToLocal(
-      void Function(int) onProgress,
-      void Function(int) synced,
-      void Function(int) failed,
-      void Function(int) skipped,
-      ) async {
+    void Function(int) onProgress,
+    void Function(int) synced,
+    void Function(int) failed,
+    void Function(int) skipped,
+  ) async {
     try {
       // Get all documents from the cloud
       final querySnapshot = await DatabaseService().getAllSingleUserCattle();
@@ -332,7 +352,7 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
         final doc = documents[i];
 
         final state =
-        await CattleRepository().syncSingleCattleFromCloud(doc.id);
+            await CattleRepository().syncSingleCattleFromCloud(doc.id);
 
         switch (state) {
           case 'synced':
