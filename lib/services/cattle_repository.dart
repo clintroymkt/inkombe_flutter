@@ -524,6 +524,66 @@ class CattleRepository {
     }
   }
 
+  /// Update existing cattle record
+  Future<void> updateCattle({
+    required String cattleId,
+    required String name,
+    required String breed,
+    required String age,
+    required String weight,
+    required String height,
+    required String sex,
+    required String diseasesAilments,
+  }) async {
+    try {
+      final localData = _cattleBox?.get(cattleId);
+      if (localData == null) throw Exception('Cattle record not found');
+
+      final currentRecord =
+          CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+
+      // Verify ownership
+      if (currentRecord.ownerUid != currentUser?.uid) {
+        throw Exception('Unauthorized update');
+      }
+
+      final updatedRecord = CattleRecord(
+        id: currentRecord.id,
+        age: age,
+        breed: breed,
+        sex: sex,
+        diseasesAilments: diseasesAilments,
+        height: height,
+        name: name,
+        weight: weight,
+        localImagePaths: currentRecord.localImagePaths,
+        imageUrls: currentRecord.imageUrls,
+        image: currentRecord.image,
+        faceEmbeddings: currentRecord.faceEmbeddings,
+        noseEmbeddings: currentRecord.noseEmbeddings,
+        date: currentRecord.date,
+        ownerUid: currentRecord.ownerUid,
+        isSynced: false, // Mark as unsynced so it uploads
+        lastSyncAttempt: DateTime.now().millisecondsSinceEpoch,
+        syncAttempts: 0,
+      );
+
+      // Save locally
+      await _storeCattleLocally(updatedRecord);
+
+      // Queue for sync
+      await _addToSyncQueue(cattleId);
+
+      // Try syncing immediately if online
+      if (await _isOnline()) {
+        await syncCattleToCloudRecord(cattleId);
+      }
+    } catch (e) {
+      debugPrint('Error updating cattle: $e');
+      rethrow;
+    }
+  }
+
   /// Sync single cattle from cloud to local
   Future<String> syncSingleCattleFromCloud(String cattleId) async {
     try {
@@ -560,11 +620,23 @@ class CattleRepository {
         return 'unauthorized';
       }
 
+      // Check if we have local unsynced changes - PROTECTION AGAINST OVERWRITE
+      final localData = _cattleBox?.get(cattleId);
+      if (localData != null) {
+        final localRecord =
+            CattleRecord.fromJson(Map<String, dynamic>.from(localData));
+
+        if (!localRecord.isSynced) {
+          debugPrint(
+              'Skipping cloud sync for $cattleId: Local has unsynced changes');
+          return 'conflict'; // Local version is newer/edited
+        }
+      }
+
       // Parse document
       final cattleRecord = await _parseCloudDocument(cloudData, cattleId);
 
-      // Check if update is needed
-      final localData = _cattleBox?.get(cattleId);
+      // Check if update is needed (timestamp check)
       if (localData != null) {
         final localRecord =
             CattleRecord.fromJson(Map<String, dynamic>.from(localData));
@@ -572,10 +644,10 @@ class CattleRepository {
         final cloudTimestamp = cloudData['lastSyncAttempt'] ?? 0;
         final localTimestamp = localRecord.lastSyncAttempt;
 
-        final shouldUpdate =
-            cloudTimestamp > (localTimestamp ?? 0) || !localRecord.isSynced;
-
-        if (!shouldUpdate) {
+        // If cloud timestamp is older or equal, and we are synced, we might skip
+        // But if we are here, we know local IS synced (from check above).
+        // So we only update if cloud is strictly newer.
+        if (cloudTimestamp <= (localTimestamp ?? 0)) {
           debugPrint('Local version is up-to-date for cattle: $cattleId');
           return 'skip';
         }
@@ -586,49 +658,35 @@ class CattleRepository {
 
       print(localImagePaths);
 
-      if (localImagePaths.isNotEmpty) {
-        final updatedRecord = CattleRecord(
-          id: cattleRecord.id,
-          age: cattleRecord.age,
-          breed: cattleRecord.breed,
-          sex: cattleRecord.sex,
-          diseasesAilments: cattleRecord.diseasesAilments,
-          height: cattleRecord.height,
-          name: cattleRecord.name,
-          weight: cattleRecord.weight,
-          localImagePaths: localImagePaths,
-          imageUrls: cattleRecord.imageUrls,
-          faceEmbeddings: cattleRecord.faceEmbeddings,
-          noseEmbeddings: cattleRecord.noseEmbeddings,
-          date: cattleRecord.date,
-          ownerUid: cattleRecord.ownerUid,
-          isSynced: true,
-          lastSyncAttempt: DateTime.now().millisecondsSinceEpoch,
-          syncAttempts: cattleRecord.syncAttempts,
-        );
+      // Only update if we successfully downloaded images or if there were no images to download
+      // Note: If cloud has no images, localImagePaths will be empty but valid
 
-        await _storeCattleLocally(updatedRecord);
+      final updatedRecord = CattleRecord(
+        id: cattleRecord.id,
+        age: cattleRecord.age,
+        breed: cattleRecord.breed,
+        sex: cattleRecord.sex,
+        diseasesAilments: cattleRecord.diseasesAilments,
+        height: cattleRecord.height,
+        name: cattleRecord.name,
+        weight: cattleRecord.weight,
+        localImagePaths: localImagePaths.isNotEmpty
+            ? localImagePaths
+            : cattleRecord
+                .localImagePaths, // Keep existing if download fails? No, replace.
+        imageUrls: cattleRecord.imageUrls,
+        faceEmbeddings: cattleRecord.faceEmbeddings,
+        noseEmbeddings: cattleRecord.noseEmbeddings,
+        date: cattleRecord.date,
+        ownerUid: cattleRecord.ownerUid,
+        isSynced: true,
+        lastSyncAttempt: DateTime.now().millisecondsSinceEpoch,
+        syncAttempts: cattleRecord.syncAttempts,
+      );
 
-        //sync the lastsync attampt to cloud
-        // Prepare Firestore data
-        final firestoreData = updatedRecord.toJson();
+      await _storeCattleLocally(updatedRecord);
 
-        // Serialize embeddings for Firestore
-        firestoreData['faceEmbeddings'] =
-            _serializeEmbeddings(cattleRecord.faceEmbeddings);
-        firestoreData['noseEmbeddings'] =
-            _serializeEmbeddings(cattleRecord.noseEmbeddings);
-        firestoreData.remove('localImagePaths'); // Don't send local paths
-
-        // Upload to Firestore
-        await cattleCollection
-            .doc(cattleId)
-            .set(firestoreData, SetOptions(merge: true));
-
-        return 'synced';
-      }
-
-      return 'no images';
+      return 'synced';
     } catch (e, stack) {
       debugPrint('Error syncing cattle $cattleId from cloud: $e\n$stack');
       return 'failed';
