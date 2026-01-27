@@ -1,5 +1,3 @@
-// lib/widgets/pagination_loading_indicator.dart
-
 import 'package:flutter/material.dart';
 
 class PaginationLoadingIndicator extends StatelessWidget {
@@ -53,6 +51,3 @@ class PaginationLoadingIndicator extends StatelessWidget {
     return const SizedBox.shrink();
   }
 }
-
-
-

@@ -1,6 +1,3 @@
-// Your updated ManageCattlePage with pagination integration
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:inkombe_flutter/services/cattle_repository.dart';
