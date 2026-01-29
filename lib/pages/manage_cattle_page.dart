@@ -26,7 +26,6 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   int onlineDocsCount = 0;
 
   final ScrollController _scrollController = ScrollController();
-  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -61,9 +60,6 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
       _paginationService.loadMore();
     }
   }
-
-  // ... keep your existing syncCattleData and syncCloudToLocal methods ...
-  // They remain exactly the same as in your original code
 
   void refreshData() {
     _paginationService.refresh();
@@ -265,6 +261,9 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                       ? cattle.image!
                       : null,
               docId: cattle.id,
+              onUpdate: () {
+                _paginationService.refresh();
+              },
             ),
           );
         },
