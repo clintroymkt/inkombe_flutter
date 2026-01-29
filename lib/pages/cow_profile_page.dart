@@ -3,7 +3,6 @@ import 'package:inkombe_flutter/services/cattle_record.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
 import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'dart:io';
-import 'package:intl/intl.dart';
 
 import '../utils/Utilities.dart';
 
