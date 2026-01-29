@@ -1,14 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
 import 'package:inkombe_flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/cattle_repository.dart';
-import '../services/database_service.dart';
 import '../services/network_service.dart';
-import '../widgets/list_card.dart';
 
 class CreateCowPageCopy extends StatefulWidget {
   final List<File> pngFilesList;
@@ -69,14 +65,14 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
       body: SafeArea(
         child: Container(
           constraints: const BoxConstraints.expand(),
-          color: Color(0xFFFFFFFF),
+          color: const Color(0xFFFFFFFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Container(
-                  color: Color(0xFF064151),
-                  padding: EdgeInsets.only(top: 41),
+                  color: const Color(0xFF064151),
+                  padding: const EdgeInsets.only(top: 41),
                   width: double.infinity,
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -121,7 +117,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _nameController,
                                             decoration: const InputDecoration(
@@ -145,7 +142,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _ageController,
                                             keyboardType: TextInputType.number,
@@ -174,7 +172,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _heightController,
                                             keyboardType: TextInputType.number,
@@ -203,7 +202,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _weightController,
                                             keyboardType: TextInputType.number,
@@ -232,7 +232,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _breedController,
                                             decoration: const InputDecoration(
@@ -281,7 +282,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _diseasesController,
                                             decoration: const InputDecoration(
@@ -303,7 +305,7 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                         child: Container(
                                           padding: const EdgeInsets.all(20),
                                           decoration: BoxDecoration(
-                                            color: Color(0xFF064151),
+                                            color: const Color(0xFF064151),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
@@ -357,13 +359,13 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
           // noseEmbeddingsList!,
           // _ageController.text.trim(),
 
-          age: _ageController.text,
-          breed: _breedController.text,
-          sex: 'Female', // Get from your form
-          diseasesAilments: 'None', // Get from your form
-          height: '1.4', // Get from your form
-          name: _nameController.text,
-          weight: '450', // Get from your form
+          age: _ageController.text.trim(),
+          breed: _breedController.text.trim(),
+          sex: _sexController.text.trim(),
+          diseasesAilments: _diseasesController.text.trim(),
+          height: _heightController.text.trim(),
+          name: _nameController.text.trim(),
+          weight: _weightController.text.trim(),
           images: _images,
           faceEmbeddings: faceEmbeddingsList!,
           noseEmbeddings: noseEmbeddingsList!,
