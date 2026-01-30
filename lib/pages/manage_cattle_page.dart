@@ -13,6 +13,8 @@ import '../services/cattle_record.dart';
 import '../widgets/list_card.dart';
 import '../widgets/sync_progress_dialog.dart';
 
+import 'package:inkombe_flutter/pages/search_cattle_page.dart';
+
 class ManageCattlePage extends StatefulWidget {
   const ManageCattlePage({super.key});
 
@@ -79,6 +81,26 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Manage Cattle',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SearchCattlePage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Container(
           constraints: const BoxConstraints.expand(),
