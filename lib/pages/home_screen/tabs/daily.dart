@@ -121,6 +121,7 @@ class _DailyTabState extends State<DailyTab> {
                               ? doc.localImagePaths![0]
                               : null,
                           docId: doc.id,
+                          onUpdate: refreshData,
                         ),
                     ],
                   );
