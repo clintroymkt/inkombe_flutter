@@ -12,6 +12,7 @@ class ListCard extends StatefulWidget {
   final String date;
   final String? imageUri;
   final String? imagePath;
+  final VoidCallback? onUpdate;
 
   const ListCard({
     super.key,
@@ -20,6 +21,7 @@ class ListCard extends StatefulWidget {
     required this.docId,
     this.imageUri,
     this.imagePath,
+    this.onUpdate,
   });
 
   @override
@@ -169,12 +171,15 @@ class _ListCardState extends State<ListCard> {
           ),
         ),
       ),
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => CowProfilePage(docId: widget.docId)),
         );
+        if (result == true && widget.onUpdate != null) {
+          widget.onUpdate!();
+        }
       },
     );
   }
