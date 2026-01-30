@@ -3,7 +3,6 @@ import 'package:inkombe_flutter/services/cattle_record.dart';
 import 'package:inkombe_flutter/services/cattle_sync_service.dart';
 import 'package:inkombe_flutter/services/cattle_repository.dart';
 import 'dart:io';
-import 'package:intl/intl.dart';
 
 import '../utils/Utilities.dart';
 
@@ -18,6 +17,7 @@ class CowProfilePage extends StatefulWidget {
 class _CowProfilePageState extends State<CowProfilePage> {
   late Future<CattleRecord?> _cowDataFuture;
   bool _isEditing = false;
+  bool _hasUpdates = false;
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
 
@@ -382,6 +382,8 @@ class _CowProfilePageState extends State<CowProfilePage> {
         diseasesAilments: _healthController.text,
       );
 
+      _hasUpdates = true;
+
       if (mounted) Navigator.pop(context); // Close loader
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -402,137 +404,146 @@ class _CowProfilePageState extends State<CowProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: FutureBuilder<CattleRecord?>(
-          future: _cowDataFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+    return WillPopScope(
+        onWillPop: () async {
+          Navigator.pop(context, _hasUpdates);
+          return false;
+        },
+        child: Scaffold(
+          body: SafeArea(
+            child: FutureBuilder<CattleRecord?>(
+              future: _cowDataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('Error loading cow data',
-                        style: const TextStyle(fontSize: 16)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                        onPressed: _refreshData, child: const Text('Retry')),
-                  ],
-                ),
-              );
-            }
-
-            if (!snapshot.hasData || snapshot.data == null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.pets, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text('Cow not found', style: TextStyle(fontSize: 16)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back'),
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text('Error loading cow data',
+                            style: const TextStyle(fontSize: 16)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                            onPressed: _refreshData,
+                            child: const Text('Retry')),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
+                  );
+                }
 
-            final data = snapshot.data!;
-            // Ensure controllers are populated once
-            if (!_isEditing && _nameController.text.isEmpty) {
-              _populateControllers(data);
-            }
-
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Carousel
-                      _buildImageCarousel(data),
-
-                      // App Bar
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: AppBar(
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          leading: IconButton(
-                            icon: const Icon(Icons.arrow_back,
-                                color: Colors.white),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          actions: [
-                            _buildSyncStatus(data),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.refresh,
-                                  color: Colors.white),
-                              onPressed: _refreshData,
-                            ),
-                          ],
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.pets, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text('Cow not found',
+                            style: TextStyle(fontSize: 16)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, _hasUpdates),
+                          child: const Text('Go Back'),
                         ),
-                      ),
+                      ],
+                    ),
+                  );
+                }
 
-                      // Tab Buttons
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 20,
-                        child: Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              color: const Color(0xFF064151),
-                            ),
-                            padding: const EdgeInsets.all(4),
-                            margin: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildInfoButton("Info", !_isEditing),
-                                _buildInfoButton("Edit", _isEditing),
+                final data = snapshot.data!;
+                // Ensure controllers are populated once
+                if (!_isEditing && _nameController.text.isEmpty) {
+                  _populateControllers(data);
+                }
+
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Carousel
+                          _buildImageCarousel(data),
+
+                          // App Bar
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: AppBar(
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                              leading: IconButton(
+                                icon: const Icon(Icons.arrow_back,
+                                    color: Colors.white),
+                                onPressed: () =>
+                                    Navigator.pop(context, _hasUpdates),
+                              ),
+                              actions: [
+                                _buildSyncStatus(data),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.refresh,
+                                      color: Colors.white),
+                                  onPressed: _refreshData,
+                                ),
                               ],
                             ),
                           ),
+
+                          // Tab Buttons
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 20,
+                            child: Center(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  color: const Color(0xFF064151),
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildInfoButton("Info", !_isEditing),
+                                    _buildInfoButton("Edit", _isEditing),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Content Section
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 24),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
                         ),
+                        child: _isEditing
+                            ? _buildEditView(data)
+                            : _buildInfoView(data),
                       ),
                     ],
                   ),
-
-                  // Content Section
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 24),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    child: _isEditing
-                        ? _buildEditView(data)
-                        : _buildInfoView(data),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
+                );
+              },
+            ),
+          ),
+        ));
   }
 
   Widget _buildInfoView(CattleRecord data) {

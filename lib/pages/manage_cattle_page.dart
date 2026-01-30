@@ -13,6 +13,8 @@ import '../services/cattle_record.dart';
 import '../widgets/list_card.dart';
 import '../widgets/sync_progress_dialog.dart';
 
+import 'package:inkombe_flutter/pages/search_cattle_page.dart';
+
 class ManageCattlePage extends StatefulWidget {
   const ManageCattlePage({super.key});
 
@@ -26,7 +28,6 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   int onlineDocsCount = 0;
 
   final ScrollController _scrollController = ScrollController();
-  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -62,9 +63,6 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
     }
   }
 
-  // ... keep your existing syncCattleData and syncCloudToLocal methods ...
-  // They remain exactly the same as in your original code
-
   void refreshData() {
     _paginationService.refresh();
   }
@@ -83,6 +81,26 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Manage Cattle',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SearchCattlePage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Container(
           constraints: const BoxConstraints.expand(),
@@ -265,6 +283,9 @@ class _ManageCattlePageState extends State<ManageCattlePage> {
                       ? cattle.image!
                       : null,
               docId: cattle.id,
+              onUpdate: () {
+                _paginationService.refresh();
+              },
             ),
           );
         },

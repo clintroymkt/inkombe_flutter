@@ -216,14 +216,35 @@ class CattleRepository {
       // Parse documents
       final records = <CattleRecord>[];
       for (final doc in querySnapshot.docs) {
-        final cattleRecord = await _parseCloudDocument(
+        final cloudRecord = await _parseCloudDocument(
           doc.data() as Map<String, dynamic>,
           doc.id,
         );
-        records.add(cattleRecord);
 
-        // Cache locally
-        await _storeCattleLocally(cattleRecord);
+        // Check for local unsynced changes
+        // If we have a local record that hasn't synced yet, prefer it over the cloud version
+        // to avoid overwriting the user's recent changes with old cloud data.
+        CattleRecord recordToUse = cloudRecord;
+        try {
+          final localDataRaw = _cattleBox?.get(doc.id);
+          if (localDataRaw != null) {
+            final localRecord =
+                CattleRecord.fromJson(Map<String, dynamic>.from(localDataRaw));
+            if (!localRecord.isSynced) {
+              recordToUse = localRecord;
+            }
+          }
+        } catch (e) {
+          debugPrint('Error checking local override: $e');
+        }
+
+        records.add(recordToUse);
+
+        // Only overwrite local cache if we are using the cloud record
+        // If we are using the local record, we don't want to overwrite it with old cloud data.
+        if (recordToUse == cloudRecord) {
+          await _storeCattleLocally(recordToUse);
+        }
       }
 
       final newLastDoc = querySnapshot.docs.last;
@@ -581,6 +602,29 @@ class CattleRepository {
     } catch (e) {
       debugPrint('Error updating cattle: $e');
       rethrow;
+    }
+  }
+
+  /// Search cattle locally
+  Future<List<CattleRecord>> searchCattle(String query) async {
+    try {
+      final allCattle = getAllCattle();
+      if (query.isEmpty) return allCattle;
+
+      final lowerQuery = query.toLowerCase();
+
+      return allCattle.where((record) {
+        final name = record.name.toLowerCase();
+        final breed = record.breed.toLowerCase();
+        final age = record.age.toLowerCase();
+
+        return name.contains(lowerQuery) ||
+            breed.contains(lowerQuery) ||
+            age.contains(lowerQuery);
+      }).toList();
+    } catch (e) {
+      debugPrint('Error searching cattle: $e');
+      return [];
     }
   }
 
