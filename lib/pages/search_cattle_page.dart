@@ -65,24 +65,15 @@ class _SearchCattlePageState extends State<SearchCattlePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        title: const Text(
+          'Search Cattle',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
-        ),
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Search by name, breed, or age...',
-            border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.grey),
-          ),
-          style: const TextStyle(color: Colors.black, fontSize: 18),
-          onChanged: (value) {
-            _performSearch(value);
-          },
         ),
         actions: [
           if (_query.isNotEmpty)
@@ -98,6 +89,22 @@ class _SearchCattlePageState extends State<SearchCattlePage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Search by name, breed, or age...',
+                border: InputBorder.none,
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+              style: const TextStyle(color: Colors.black, fontSize: 18),
+              onChanged: (value) {
+                _performSearch(value);
+              },
+            ),
+          ),
           if (!_isLoading)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
