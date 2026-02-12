@@ -6,6 +6,7 @@ import 'package:inkombe_flutter/services/database_service.dart';
 
 class CosineSimilarityCheck {
   CattleRepository cattleRepository = CattleRepository();
+
   /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
 
   /// [faceEmbeddingsList]: List of face embeddings from the scanned image (3 embeddings)
@@ -69,47 +70,16 @@ class CosineSimilarityCheck {
   /// Parses and filters stored cows from Firestore documents
   List<Map<String, dynamic>> _parseOnlineCattle(
       List<QueryDocumentSnapshot> docs) {
-    return docs
-        .map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
-          final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
-
-          // Filter out empty inner lists
-          final filteredFaceEmbs = faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
-          final filteredNoseEmbs = noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
-
-          return {
-            'id': doc.id,
-            'faceEmbeddings': filteredFaceEmbs,
-            'noseEmbeddings': filteredNoseEmbs,
-            'fullData': data,
-          };
-        })
-        .where((doc) {
-      final face = doc['faceEmbeddings'];
-      final nose = doc['noseEmbeddings'];
-
-      // Now we can just check if lists are empty
-      return face is List &&
-          nose is List &&
-          face.isNotEmpty &&
-          nose.isNotEmpty;
-    })
-        .toList();
-  }
-
-  List<Map<String, dynamic>> _parseOfflineCattle(List<CattleRecord> docs) {
-    return docs
-        .map((doc) {
-      final data = doc.toJson();
-
+    return docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
       final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
       final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
 
       // Filter out empty inner lists
-      final filteredFaceEmbs = faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
-      final filteredNoseEmbs = noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
+      final filteredFaceEmbs =
+          faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
+      final filteredNoseEmbs =
+          noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
 
       return {
         'id': doc.id,
@@ -117,18 +87,41 @@ class CosineSimilarityCheck {
         'noseEmbeddings': filteredNoseEmbs,
         'fullData': data,
       };
-    })
-        .where((doc) {
+    }).where((doc) {
       final face = doc['faceEmbeddings'];
       final nose = doc['noseEmbeddings'];
 
       // Now we can just check if lists are empty
-      return face is List &&
-          nose is List &&
-          face.isNotEmpty &&
-          nose.isNotEmpty;
-    })
-        .toList();
+      return face is List && nose is List && face.isNotEmpty && nose.isNotEmpty;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _parseOfflineCattle(List<CattleRecord> docs) {
+    return docs.map((doc) {
+      final data = doc.toJson();
+
+      final faceEmbs = _parseEmbedding(data['faceEmbeddings']);
+      final noseEmbs = _parseEmbedding(data['noseEmbeddings']);
+
+      // Filter out empty inner lists
+      final filteredFaceEmbs =
+          faceEmbs.where((innerList) => innerList.isNotEmpty).toList();
+      final filteredNoseEmbs =
+          noseEmbs.where((innerList) => innerList.isNotEmpty).toList();
+
+      return {
+        'id': doc.id,
+        'faceEmbeddings': filteredFaceEmbs,
+        'noseEmbeddings': filteredNoseEmbs,
+        'fullData': data,
+      };
+    }).where((doc) {
+      final face = doc['faceEmbeddings'];
+      final nose = doc['noseEmbeddings'];
+
+      // Now we can just check if lists are empty
+      return face is List && nose is List && face.isNotEmpty && nose.isNotEmpty;
+    }).toList();
   }
 
   /// Parses embeddings from Firestore data (handles both List and Map formats)
@@ -174,7 +167,6 @@ class CosineSimilarityCheck {
     double faceWeight,
     double noseWeight,
   ) {
-
     return storedCows.map((cow) {
       final cowFaceEmbs = cow['faceEmbeddings'] as List<List<double>>;
       final cowNoseEmbs = cow['noseEmbeddings'] as List<List<double>>;
