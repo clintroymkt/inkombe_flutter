@@ -1,16 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:inkombe_flutter/services/database_service.dart';
 
-class AuthService{
+class AuthService {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-  Future loginWithEmailAndPassword(String email, String password) async{
-    try{
-      User user =(await firebaseAuth.signInWithEmailAndPassword(email: email, password: password)).user!;
+  Future loginWithEmailAndPassword(String email, String password) async {
+    try {
+      User user = (await firebaseAuth.signInWithEmailAndPassword(
+              email: email, password: password))
+          .user!;
       return true;
-    } on FirebaseAuthException catch (e){
+    } on FirebaseAuthException catch (e) {
       print(e);
-      return(e.message);
+      return (e.message);
     }
   }
 
@@ -18,16 +20,15 @@ class AuthService{
     FirebaseAuth.instance.signOut();
   }
 
-  Future signUpUserWithEmailAndPassword(String email, String password) async{
-    try{
-      User user =(await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user!;
-     DatabaseService().savingUserData(email);
+  Future signUpUserWithEmailAndPassword(String email, String password) async {
+    try {
+      User user = (await firebaseAuth.createUserWithEmailAndPassword(
+              email: email, password: password))
+          .user!;
+      DatabaseService().savingUserData(email);
       return true;
-    } on FirebaseAuthException catch (e){
-      return(e.message);
+    } on FirebaseAuthException catch (e) {
+      return (e.message);
     }
   }
-
-
-
 }

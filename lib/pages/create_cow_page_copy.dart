@@ -1,15 +1,10 @@
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
 import 'package:inkombe_flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/database_service.dart';
-import '../widgets/list_card.dart';
+import '../services/cattle_repository.dart';
+import '../services/network_service.dart';
 
 class CreateCowPageCopy extends StatefulWidget {
   final List<File> pngFilesList;
@@ -40,6 +35,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
   final _sexController = TextEditingController();
   final _diseasesController = TextEditingController();
 
+  final CattleRepository _cattleRepo = CattleRepository();
+
   @override
   void initState() {
     super.initState();
@@ -68,14 +65,14 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
       body: SafeArea(
         child: Container(
           constraints: const BoxConstraints.expand(),
-          color: Color(0xFFFFFFFF),
+          color: const Color(0xFFFFFFFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Container(
-                  color: Color(0xFF064151),
-                  padding: EdgeInsets.only(top: 41),
+                  color: const Color(0xFF064151),
+                  padding: const EdgeInsets.only(top: 41),
                   width: double.infinity,
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -96,7 +93,9 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                               InkWell(
                                 child: CircleAvatar(
                                   radius: 100,
-                                  backgroundImage: _images?[0] != null ? FileImage(_images![0]) : null,
+                                  backgroundImage: _images?[0] != null
+                                      ? FileImage(_images![0])
+                                      : null,
                                 ),
                                 onTap: () {
                                   getImage();
@@ -107,15 +106,19 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                 child: Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _nameController,
                                             decoration: const InputDecoration(
@@ -128,19 +131,26 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _ageController,
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly
+                                            ],
                                             decoration: const InputDecoration(
                                               border: InputBorder.none,
                                               hintText: 'Age',
@@ -151,19 +161,26 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _heightController,
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: [FilteringTextInputFormatter.singleLineFormatter],
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .singleLineFormatter
+                                            ],
                                             decoration: const InputDecoration(
                                               border: InputBorder.none,
                                               hintText: 'Height(m)',
@@ -174,19 +191,26 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _weightController,
                                             keyboardType: TextInputType.number,
-                                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly
+                                            ],
                                             decoration: const InputDecoration(
                                               border: InputBorder.none,
                                               hintText: 'Weight(kg)',
@@ -197,15 +221,19 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _breedController,
                                             decoration: const InputDecoration(
@@ -218,15 +246,19 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _sexController,
                                             decoration: const InputDecoration(
@@ -239,15 +271,19 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: 10.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 10.0),
                                           child: TextFormField(
                                             controller: _diseasesController,
                                             decoration: const InputDecoration(
@@ -260,7 +296,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                     ),
                                     const SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 25.0),
                                       child: GestureDetector(
                                         onTap: () {
                                           createCow();
@@ -268,13 +305,15 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
                                         child: Container(
                                           padding: const EdgeInsets.all(20),
                                           decoration: BoxDecoration(
-                                            color: Color(0xFF064151),
-                                            borderRadius: BorderRadius.circular(12),
+                                            color: const Color(0xFF064151),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                           child: const Center(
                                             child: Text(
                                               'Add Cow',
-                                              style: TextStyle(color: Colors.white),
+                                              style: TextStyle(
+                                                  color: Colors.white),
                                             ),
                                           ),
                                         ),
@@ -300,25 +339,82 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
 
   createCow() async {
     if (formKey.currentState!.validate()) {
-      await DatabaseService().uploadImage(
-        _images?[0],
-        _ageController.text.trim(),
-        _breedController.text.trim(),
-        _sexController.text.trim(),
-        _diseasesController.text.trim(),
-        _heightController.text.trim(),
-        _nameController.text.trim(),
-        _weightController.text.trim(),
-        faceEmbeddingsList!,
-        noseEmbeddingsList!,
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
       );
-      showSnackBar(context, Colors.greenAccent, "Cow created successfully");
-      _ageController.clear();
-      _breedController.clear();
-      _diseasesController.clear();
-      _heightController.clear();
-      _nameController.clear();
-      _weightController.clear();
+
+      try {
+        await _cattleRepo.createCattle(
+          // _images?[0],
+          // _ageController.text.trim(),
+          // _breedController.text.trim(),
+          // _sexController.text.trim(),
+          // _diseasesController.text.trim(),
+          // _heightController.text.trim(),
+          // _nameController.text.trim(),
+          // _weightController.text.trim(),
+          // faceEmbeddingsList!,
+          // noseEmbeddingsList!,
+          // _ageController.text.trim(),
+
+          age: _ageController.text.trim(),
+          breed: _breedController.text.trim(),
+          sex: _sexController.text.trim(),
+          diseasesAilments: _diseasesController.text.trim(),
+          height: _heightController.text.trim(),
+          name: _nameController.text.trim(),
+          weight: _weightController.text.trim(),
+          images: _images,
+          faceEmbeddings: faceEmbeddingsList!,
+          noseEmbeddings: noseEmbeddingsList!,
+          date: DateTime.now().toString(),
+        );
+        Navigator.pop(context);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cattle saved successfully!')),
+        );
+
+        // Check sync status
+        final isOnline = await NetworkService.isOnline();
+        if (!isOnline) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Saved locally - will sync when online'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        Navigator.pop(context); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving cattle: $e')),
+        );
+      }
+      //   Old implementation
+      //   await DatabaseService().uploadImage(
+      //     _images?[0],
+      //     _ageController.text.trim(),
+      //     _breedController.text.trim(),
+      //     _sexController.text.trim(),
+      //     _diseasesController.text.trim(),
+      //     _heightController.text.trim(),
+      //     _nameController.text.trim(),
+      //     _weightController.text.trim(),
+      //     faceEmbeddingsList!,
+      //     noseEmbeddingsList!,
+      //   );
+      //   showSnackBar(context, Colors.greenAccent, "Cow created successfully");
+      //   _ageController.clear();
+      //   _breedController.clear();
+      //   _diseasesController.clear();
+      //   _heightController.clear();
+      //   _nameController.clear();
+      //   _weightController.clear();
     }
   }
 
@@ -328,7 +424,8 @@ class _CreateCowPageCopyState extends State<CreateCowPageCopy> {
       if (pickedFile != null) {
         _images = File(pickedFile.path) as List<File>?;
       } else {
-        showSnackBar(context, Colors.orange, "Please pick an image to create a post");
+        showSnackBar(
+            context, Colors.orange, "Please pick an image to create a post");
       }
     });
   }

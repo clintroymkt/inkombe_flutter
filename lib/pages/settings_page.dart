@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../Authentication/firebase_auth.dart';
 import '../Authentication/pages/login.dart';
 import '../widgets.dart';
-import '../widgets/alert_dialog.dart';
+import '../widgets/custom_alert_dialog.dart';
 import '../widgets/settings_option.dart';
 
 class SettingsPage extends StatefulWidget {

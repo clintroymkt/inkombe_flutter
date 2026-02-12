@@ -40,31 +40,29 @@ class DatabaseService {
     return snapshot;
   }
 
-
-
 //   create cattle
   Future<void> createCattle(
-      String age,
-      String breed,
-      String sex,
-      String diseasesAilments,
-      String height,
-      String name,
-      String weight,
-      String image,
-      List<List<double>> faceEmbeddings,
-      List<List<double>> noseEmbeddings,
-      String date,
-      ) async {
+    String age,
+    String breed,
+    String sex,
+    String diseasesAilments,
+    String height,
+    String name,
+    String weight,
+    String image,
+    List<List<double>> faceEmbeddings,
+    List<List<double>> noseEmbeddings,
+    String date,
+  ) async {
     try {
       // Convert nested lists to serializable format
       final serializedFaceEmbeddings = faceEmbeddings.asMap().map(
             (index, embedding) => MapEntry(index.toString(), embedding),
-      );
+          );
 
       final serializedNoseEmbeddings = noseEmbeddings.asMap().map(
             (index, embedding) => MapEntry(index.toString(), embedding),
-      );
+          );
 
       await cattleCollection.add({
         "name": name,
@@ -95,23 +93,37 @@ class DatabaseService {
         .limit(3)
         .snapshots();
   }
+
   getCattleUpdates2() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
         .orderBy("dateAdded", descending: true)
         .snapshots();
   }
-  getAllCattle(){
-    return cattleCollection
-        .orderBy("date", descending:true)
-        .snapshots();
+
+  getAllCattle() {
+    return cattleCollection.orderBy("date", descending: true).get();
   }
+
   // for identifying cattle we need static snapshot
   getAllSingleUserCattle() {
     return cattleCollection
         .where('ownerUid', isEqualTo: currentUser?.uid)
         // .orderBy("date", descending: true)
         .get();
+  }
+
+  Future<int> getOnlineCattleCount() async {
+    try {
+      final snapshot = await cattleCollection
+          .where('ownerUid', isEqualTo: currentUser?.uid)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      debugPrint('Error getting online cattle count: $e');
+      return 0;
+    }
   }
 
   streamAllSingleUserCattle() {
@@ -138,7 +150,7 @@ class DatabaseService {
       String name,
       String weight,
       List<List<double>> faceEmbeddings,
-      List<List<double>>  noseEmbeddings) async {
+      List<List<double>> noseEmbeddings) async {
     var random = Random();
     var rand = random.nextInt(1000000000);
     // Give the image a random name

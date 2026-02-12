@@ -51,6 +51,15 @@ dependencies:
   line_icons: ^2.0.3
   image: ^3.2.2
   shared_preferences: ^2.5.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.0.15
+  cached_network_image: ^3.3.0
+  connectivity_plus: ^5.0.0
+  http: ^1.1.0
+  test: ^1.25.15
+  fake_cloud_firestore: ^3.1.0
+  mockito: ^5.5.0
 
 
 dev_dependencies:
