@@ -7,9 +7,9 @@ import 'package:inkombe_flutter/services/database_service.dart';
 class CosineSimilarityCheck {
   CattleRepository cattleRepository = CattleRepository();
   /// Checks cattle similarity using weighted cosine similarity of face and nose embeddings.
-  ///@param mode indicates whether its an online scan or offline scan
-  /// [faceEmbeddingsList]: List of face embeddings from the scanned image (typically 3 embeddings)
-  /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (typically 3 embeddings)
+
+  /// [faceEmbeddingsList]: List of face embeddings from the scanned image (3 embeddings)
+  /// [noseEmbeddingsList]: List of nose embeddings from the scanned image (3 embeddings)
   /// Returns a list of matches sorted by combined similarity score
   Future<List<Map<String, dynamic>>> checkSimilarity({
     required String mode,
@@ -25,51 +25,25 @@ class CosineSimilarityCheck {
       _validateInputs(faceEmbeddingsList, noseEmbeddingsList);
 
       // Fetch cattle data from Firestore
-      // final snapshot = await DatabaseService().getAllSingleUserCattle(); Original
-      if (mode == 'online') {
-        print('online');
+      final snapshot = await DatabaseService().getAllSingleUserCattle();
+      // final snapshot = await DatabaseService().getAllCattle();
+      if (snapshot.docs.isEmpty) return [];
 
-        final snapshot = await DatabaseService().getAllCattle();
-        if (snapshot.docs.isEmpty) return [];
+      // Parse and filter stored cows
+      final storedCows = _parseStoredCows(snapshot.docs);
+      if (storedCows.isEmpty) return [];
 
-        // Parse and filter stored cows
-        final onlineCows = _parseOnlineCattle(snapshot.docs);
-        if (onlineCows.isEmpty) return [];
-        // Compare embeddings and get matches
-        final matches = _findMatches(
-          faceEmbeddingsList,
-          noseEmbeddingsList,
-          onlineCows,
-          faceWeight,
-          noseWeight,
-        );
+      // Compare embeddings and get matches
+      final matches = _findMatches(
+        faceEmbeddingsList,
+        noseEmbeddingsList,
+        storedCows,
+        faceWeight,
+        noseWeight,
+      );
 
-        // Sort and filter results
-        return _filterAndSortMatches(matches, highThreshold, lowThreshold);
-      }
-      //offline transaction
-      else {
-        print('offline');
-        final cattleList = cattleRepository.getAllCattle();
-
-        // Parse and filter offline cows
-        final offlineCows = _parseOfflineCattle(cattleList);
-        print('here');
-
-        if (offlineCows.isEmpty) return [];
-        print('offline cows here');
-
-        final matches = _findMatches(
-            faceEmbeddingsList,
-            noseEmbeddingsList,
-            offlineCows,
-            faceWeight,
-            noseWeight
-        );
-
-        // Sort and filter results
-        return _filterAndSortMatches(matches, highThreshold, lowThreshold);
-      }
+      // Sort and filter results
+      return _filterAndSortMatches(matches, highThreshold, lowThreshold);
     } on FirebaseException catch (e) {
       print('Firestore error: $e');
       return [];
